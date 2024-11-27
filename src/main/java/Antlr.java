@@ -13,19 +13,26 @@ import java.util.stream.Stream;
 
 public class Antlr {
 
-    GroovyClassLoader loader = new GroovyClassLoader();
+    GroovyClassLoader groovyClassLoader = new GroovyClassLoader();
 
-    public void run() {
+    public void run() throws IOException {
         String grammarName = "Logging";
         String lexerParserDirectory = generateParser(grammarName);
 
-        loadLexerAndParser(lexerParserDirectory, grammarName);
-
+        List<Class<?>> classes = loadLexerAndParser(lexerParserDirectory, grammarName);
     }
 
-    private void loadLexerAndParser(String lexerParserDirectory, String grammarName) {
+    private List<Class<?>> loadLexerAndParser(String lexerParserDirectory, String grammarName) throws IOException {
         List<String> javaFilesInDirectory = findJavaFilesInDirectory(lexerParserDirectory);
+        List<Class<?>> loadedClasses = new ArrayList<>();
 
+        for (String javaFile : javaFilesInDirectory) {
+            File file = new File(javaFile);
+            Class<?> parsedClass = groovyClassLoader.parseClass(file);
+            loadedClasses.add(parsedClass);
+        }
+
+        return loadedClasses;
     }
 
     private static List<String> findJavaFilesInDirectory(String lexerParserDirectory) {
