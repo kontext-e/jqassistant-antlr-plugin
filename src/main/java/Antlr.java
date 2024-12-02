@@ -13,7 +13,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -42,12 +41,21 @@ public class Antlr {
         URLClassLoader classLoader = URLClassLoader.newInstance(new URL[] {new File(lexerParserDirectory).toURI().toURL()});
 
         List<ParseTree> parseTrees = loadClassesToClasspath(lexerParserDirectory, classLoader);
+        parseTrees.forEach(this::iterateOverParseTree);
 
         classLoader.close();
         return null;
     }
 
+    private void iterateOverParseTree(ParseTree parseTree) {
+        //Save to db
+        System.out.println(parseTree.getClass().getName() + ": " + parseTree.getText());
 
+        for (int i = 0; i < parseTree.getChildCount(); i++) {
+            ParseTree child = parseTree.getChild(i);
+            iterateOverParseTree(child);
+        }
+    }
 
     private List<ParseTree> loadClassesToClasspath(String lexerParserDirectory, URLClassLoader classLoader) {
         try {
