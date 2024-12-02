@@ -1,8 +1,15 @@
-import groovy.lang.GroovyClassLoader;
 import org.antlr.v4.Tool;
 
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.ToolProvider;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.lang.reflect.InvocationTargetException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -13,8 +20,6 @@ import java.util.stream.Stream;
 
 public class Antlr {
 
-    GroovyClassLoader groovyClassLoader = new GroovyClassLoader();
-
     public void run() throws IOException {
         String grammarName = "Logging";
         String lexerParserDirectory = generateParser(grammarName);
@@ -22,25 +27,45 @@ public class Antlr {
         List<Class<?>> classes = loadLexerAndParser(lexerParserDirectory, grammarName);
     }
 
+    //TODO rename variables to reflect, that they are absolute Paths
     private List<Class<?>> loadLexerAndParser(String lexerParserDirectory, String grammarName) throws IOException {
-        List<String> javaFilesInDirectory = findJavaFilesInDirectory(lexerParserDirectory);
-        List<Class<?>> loadedClasses = new ArrayList<>();
+        List<String> javaFilesInDirectory = findFilesWithSuffixInDirectory(lexerParserDirectory, ".java");
+        compileJavaFiles(javaFilesInDirectory);
+        loadClassesToClasspath(lexerParserDirectory);
 
-        for (String javaFile : javaFilesInDirectory) {
-            File file = new File(javaFile);
-            Class<?> parsedClass = groovyClassLoader.parseClass(file);
-            loadedClasses.add(parsedClass);
-        }
 
-        return loadedClasses;
+        return null;
     }
 
-    private static List<String> findJavaFilesInDirectory(String lexerParserDirectory) {
+    private void loadClassesToClasspath(String lexerParserDirectory) {
+        try (URLClassLoader classLoader = URLClassLoader.newInstance(new URL[] {new File(lexerParserDirectory).toURI().toURL()})){
+            List<String> classFiles = findFilesWithSuffixInDirectory(lexerParserDirectory, ".class");
+
+            Class<?> lexer = Class.forName("LoggingLexer", true, classLoader);
+            Object instance = lexer.getDeclaredConstructors()[0].newInstance((Object) null);
+            System.out.println(instance.getClass().getName());
+        } catch (ClassNotFoundException | IOException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void compileJavaFiles(List<String> javaFiles) {
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
+
+        Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromStrings(javaFiles);
+
+        StringWriter stringWriter = new StringWriter();
+
+        compiler.getTask(stringWriter, fileManager, null, null, null, compilationUnits).call();
+    }
+
+    private static List<String> findFilesWithSuffixInDirectory(String lexerParserDirectory, String suffix) {
         List<String> sourceFiles;
         try (Stream<Path> walk = Files.walk(Paths.get(lexerParserDirectory))){
             sourceFiles = walk.filter(p -> !Files.isDirectory(p))
-                    .map(p -> p.toString().toLowerCase())
-                    .filter(p -> p.endsWith(".java"))
+                    .map(Path::toString)
+                    .filter(p -> p.endsWith(suffix))
                     .collect(Collectors.toList());
         } catch (IOException e) {
             throw new RuntimeException(e);
