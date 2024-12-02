@@ -1,4 +1,9 @@
 import org.antlr.v4.Tool;
+import org.antlr.v4.runtime.CharStreams;
+import org.antlr.v4.runtime.CodePointCharStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.TokenSource;
+import org.antlr.v4.runtime.tree.ParseTree;
 
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
@@ -7,7 +12,9 @@ import javax.tools.ToolProvider;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
@@ -31,20 +38,34 @@ public class Antlr {
     private List<Class<?>> loadLexerAndParser(String lexerParserDirectory, String grammarName) throws IOException {
         List<String> javaFilesInDirectory = findFilesWithSuffixInDirectory(lexerParserDirectory, ".java");
         compileJavaFiles(javaFilesInDirectory);
-        loadClassesToClasspath(lexerParserDirectory);
 
+        URLClassLoader classLoader = URLClassLoader.newInstance(new URL[] {new File(lexerParserDirectory).toURI().toURL()});
 
+        List<ParseTree> parseTrees = loadClassesToClasspath(lexerParserDirectory, classLoader);
+
+        classLoader.close();
         return null;
     }
 
-    private void loadClassesToClasspath(String lexerParserDirectory) {
-        try (URLClassLoader classLoader = URLClassLoader.newInstance(new URL[] {new File(lexerParserDirectory).toURI().toURL()})){
-            List<String> classFiles = findFilesWithSuffixInDirectory(lexerParserDirectory, ".class");
 
-            Class<?> lexer = Class.forName("LoggingLexer", true, classLoader);
-            Object instance = lexer.getDeclaredConstructors()[0].newInstance((Object) null);
-            System.out.println(instance.getClass().getName());
-        } catch (ClassNotFoundException | IOException | InvocationTargetException | InstantiationException | IllegalAccessException e) {
+
+    private List<ParseTree> loadClassesToClasspath(String lexerParserDirectory, URLClassLoader classLoader) {
+        try {
+            Class<?> parserClass = Class.forName("LoggingParser", true, classLoader);
+            Class<?> lexerClass = Class.forName("LoggingLexer", true, classLoader);
+
+            Object lexerObject = lexerClass.getDeclaredConstructors()[0].newInstance(getSyntaxTree());
+            CommonTokenStream tokenStream = new CommonTokenStream((TokenSource) lexerObject);
+            Object parserInstance = parserClass.getDeclaredConstructors()[0].newInstance(tokenStream);
+
+            Method method = parserClass.getMethod("log");
+            Object returnValue = method.invoke(parserInstance);
+
+            Class<?> contextClass = Class.forName("LoggingParser$LogContext", true, classLoader);
+            Field declaredFields = contextClass.getSuperclass().getDeclaredField("children");
+
+            return (List<ParseTree>) declaredFields.get(returnValue);
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
@@ -88,13 +109,13 @@ public class Antlr {
         return outputDirectory;
     }
 
-    private static void getSyntaxTree() {
-        String test = "2018-May-05 14:20:18 INFO some error occurred\n" +
+    private static CodePointCharStream getSyntaxTree() {
+        return CharStreams.fromString("2018-May-05 14:20:18 INFO some error occurred\n" +
                 "2018-May-05 14:20:19 INFO yet another error\n" +
                 "2018-May-05 14:20:20 INFO some method started\n" +
                 "2018-May-05 14:20:21 DEBUG another method started\n" +
                 "2018-May-05 14:20:21 DEBUG entering awesome method\n" +
-                "2018-May-05 14:20:24 ERROR Bad thing happened";
+                "2018-May-05 14:20:24 ERROR Bad thing happened\n\r");
     }
 
 }
