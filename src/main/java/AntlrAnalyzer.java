@@ -77,7 +77,9 @@ public class AntlrAnalyzer {
     }
 
     @SuppressWarnings("unchecked")
-    public List<ParseTree> getParseTreeOfFile(File file, ClassLoader classLoader) throws ClassNotFoundException, IOException, InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException, NoSuchFieldException {
+    public List<ParseTree> loadParserAndParseFile(ClassLoader classLoader, File file) throws ClassNotFoundException, IOException,
+            InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException, NoSuchFieldException {
+
         Class<?> parserClass = Class.forName(grammarName + "Parser", true, classLoader);
         Class<?> lexerClass = Class.forName(grammarName + "Lexer", true, classLoader);
 
@@ -88,11 +90,11 @@ public class AntlrAnalyzer {
         Method method = parserClass.getMethod(grammarRoot);
         Object returnValue = method.invoke(parserInstance);
 
-        Class<?> contextClass = Class.forName("LoggingParser$LogContext", true, classLoader);
+        //TODO Verify that this works
+        Class<?> contextClass = Class.forName(grammarName + "Parser$" + grammarRoot + "Context", true, classLoader);
         Field children = contextClass.getSuperclass().getDeclaredField("children");
 
         Object parseTrees = children.get(returnValue);
-
         return (List<ParseTree>) parseTrees;
     }
 }
