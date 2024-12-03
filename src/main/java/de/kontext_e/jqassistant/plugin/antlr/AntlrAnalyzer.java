@@ -1,3 +1,5 @@
+package de.kontext_e.jqassistant.plugin.antlr;
+
 import org.antlr.v4.Tool;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -87,11 +89,12 @@ public class AntlrAnalyzer {
         CommonTokenStream tokenStream = new CommonTokenStream((TokenSource) lexerObject);
         Object parserInstance = parserClass.getDeclaredConstructors()[0].newInstance(tokenStream);
 
-        Method method = parserClass.getMethod(grammarRoot);
+        Method method = parserClass.getMethod(grammarRoot.substring(0, 1).toLowerCase() + grammarRoot.substring(1));
         Object returnValue = method.invoke(parserInstance);
 
         //TODO Verify that this works
-        Class<?> contextClass = Class.forName(grammarName + "Parser$" + grammarRoot + "Context", true, classLoader);
+        String rootContextClassName = grammarRoot.substring(0, 1).toUpperCase() + grammarRoot.substring(1);
+        Class<?> contextClass = Class.forName(grammarName + "Parser$" + rootContextClassName + "Context", true, classLoader);
         Field children = contextClass.getSuperclass().getDeclaredField("children");
 
         Object parseTrees = children.get(returnValue);

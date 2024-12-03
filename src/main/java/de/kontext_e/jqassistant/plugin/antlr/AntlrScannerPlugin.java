@@ -1,3 +1,10 @@
+package de.kontext_e.jqassistant.plugin.antlr;
+
+import com.buschmais.jqassistant.core.scanner.api.Scanner;
+import com.buschmais.jqassistant.core.scanner.api.Scope;
+import com.buschmais.jqassistant.core.store.api.model.Descriptor;
+import com.buschmais.jqassistant.plugin.common.api.scanner.AbstractScannerPlugin;
+import com.buschmais.jqassistant.plugin.common.api.scanner.filesystem.FileResource;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.io.File;
@@ -7,14 +14,15 @@ import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
 
-public class AntlrScannerPlugin {
+public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Descriptor> {
 
     private AntlrAnalyzer antlrAnalyzer;
 
-    public void run() throws IOException {
-        String grammarName = "Logging";
-        File grammarFile = new File("src/main/antlr4/Logging.g4");
-        File parsedFile = new File("src/main/resources/output.logging");
+    @Override
+    public Descriptor scan(FileResource fileResource, String path, Scope scope, Scanner scanner) throws IOException {
+        String grammarName = path.substring(path.lastIndexOf('/') + 1, path.lastIndexOf('.'));
+        File grammarFile = new File(path);
+        File parsedFile = new File("src/test/resources/logging/output.logging");
 
         antlrAnalyzer = new AntlrAnalyzer(grammarName, "log", grammarFile);
         String lexerAndParserLocation = antlrAnalyzer.generateLexerAndParser();
@@ -24,6 +32,8 @@ public class AntlrScannerPlugin {
         List<ParseTree> parseTrees = loadParserAndParseFile(classLoader, parsedFile);
 
         parseTrees.forEach(this::iterateOverParseTree);
+
+        return null;
     }
 
     private List<ParseTree> loadParserAndParseFile(URLClassLoader classLoader, File parsedFile) {
@@ -50,4 +60,8 @@ public class AntlrScannerPlugin {
         }
     }
 
+    @Override
+    public boolean accepts(FileResource fileResource, String s, Scope scope) throws IOException {
+        return s.endsWith(".g4");
+    }
 }

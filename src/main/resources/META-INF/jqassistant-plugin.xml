@@ -1,0 +1,12 @@
+<jqassistant-plugin xmlns="http://schema.jqassistant.org/plugin/v2.4"
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xsi:schemaLocation="http://schema.jqassistant.org/plugin/v2.4 https://schema.jqassistant.org/plugin/jqassistant-plugin-v2.4.xsd"
+                    id="jqassistant.plugin.typescript"
+                    name="jQAssistant Typescript Plugin"
+                    version="${project.version}">
+
+<description>Takes a grammar file and another file as input and stores the AST of the file into the jQA DB according to the grammar</description>
+<scanner>
+    <class>de.kontext_e.jqassistant.plugin.antlr.AntlrScannerPlugin</class>
+</scanner>
+</jqassistant-plugin>
