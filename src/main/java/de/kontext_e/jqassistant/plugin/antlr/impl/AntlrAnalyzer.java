@@ -1,4 +1,4 @@
-package de.kontext_e.jqassistant.plugin.antlr;
+package de.kontext_e.jqassistant.plugin.antlr.impl;
 
 import org.antlr.v4.Tool;
 import org.antlr.v4.runtime.CharStreams;
