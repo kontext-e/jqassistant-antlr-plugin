@@ -64,7 +64,6 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Desc
         if (parent != null) {
             parent.getChildren().add(node);
         }
-        System.out.println(parseTree.getClass().getName() + ": " + parseTree.getText());
 
         for (int i = 0; i < parseTree.getChildCount(); i++) {
             ParseTree child = parseTree.getChild(i);
@@ -75,19 +74,19 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Desc
     private AntlrDescriptor createDescriptor(ParseTree parseTree) {
         AntlrDescriptor descriptor = store.create(AntlrDescriptor.class);
         descriptor.setText(parseTree.getText());
-        Object descriptorId = descriptor.getId();
-
-        String label =parseTree.getClass().getName();
-
-        Matcher matcher = Pattern.compile("\\$(.*?)Context").matcher(label);
-        if (matcher.find()) {
-            String nodeLabel = matcher.group(1);
-            //TODO Query Parameter using neo4j not String.format
-            String query = String.format("MATCH (n) WHERE id(n) = %s SET n:%s", descriptorId, nodeLabel);
-            store.executeQuery(query).close();
-        }
+        addCustomLabelToDescriptor(descriptor, parseTree);
 
         return descriptor;
+    }
+
+    private void addCustomLabelToDescriptor(AntlrDescriptor descriptor, ParseTree parseTree) {
+        String className = parseTree.getClass().getName();
+        Matcher matcher = Pattern.compile("\\$(.*?)Context").matcher(className);
+        String nodeLabel = matcher.find() ? matcher.group(1) : "TerminalNode";
+
+        //Cypher does not allow for parameterization of labels, which is why string formatting is used
+        String query = String.format("MATCH (n) WHERE id(n) = %s SET n:%s", descriptor.getId(), nodeLabel);
+        store.executeQuery(query).close();
     }
 
     @Override
