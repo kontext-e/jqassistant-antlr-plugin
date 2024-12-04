@@ -3,7 +3,6 @@ package de.kontext_e.jqassistant.plugin.antlr.impl;
 import com.buschmais.jqassistant.core.scanner.api.Scanner;
 import com.buschmais.jqassistant.core.scanner.api.Scope;
 import com.buschmais.jqassistant.core.store.api.Store;
-import com.buschmais.jqassistant.core.store.api.model.Descriptor;
 import com.buschmais.jqassistant.plugin.common.api.scanner.AbstractScannerPlugin;
 import com.buschmais.jqassistant.plugin.common.api.scanner.filesystem.FileResource;
 import de.kontext_e.jqassistant.plugin.antlr.api.model.AntlrDescriptor;
@@ -15,19 +14,36 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Descriptor> {
+public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, AntlrDescriptor> {
+
+    public static final String CREATE_NODES_CONTAINING_EMPTY_TEXT = "jqassistant.plugin.antlr.createNodesContainingEmptyText";
 
     private AntlrAnalyzer antlrAnalyzer;
+
     private Store store;
+    private boolean createEmptyNodes;
 
     @Override
-    public Descriptor scan(FileResource fileResource, String path, Scope scope, Scanner scanner) throws IOException {
+    protected void configure() {
+        String property = getProperty(CREATE_NODES_CONTAINING_EMPTY_TEXT, String.class);
+        createEmptyNodes = Set.of("true", "yes", "on").contains(property.toLowerCase());
+        super.configure();
+    }
+
+    @Override
+    public boolean accepts(FileResource fileResource, String s, Scope scope) throws IOException {
+        return s.endsWith(".g4");
+    }
+
+    @Override
+    public AntlrDescriptor scan(FileResource fileResource, String path, Scope scope, Scanner scanner) throws IOException {
         String grammarName = path.substring(path.lastIndexOf('/') + 1, path.lastIndexOf('.'));
         File grammarFile = new File(path);
-        File parsedFile = new File("src/test/resources/logging/output.logging");
+        File parsedFile = new File("C:/Users/WilThi/IdeaProjects/jqassistant-antlr-plugin/src/test/resources/logging/output.logging");
 
         store = scanner.getContext().getStore();
 
@@ -42,6 +58,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Desc
             iterateOverParseTree(null, parseTree);
         }
 
+        //TODO
         return null;
     }
 
@@ -60,6 +77,8 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Desc
     }
 
     private void iterateOverParseTree(AntlrDescriptor parent, ParseTree parseTree) {
+        if (parseTree.getText().isBlank() && !createEmptyNodes) return;
+
         AntlrDescriptor node = createDescriptor(parseTree);
         if (parent != null) {
             parent.getChildren().add(node);
@@ -87,10 +106,5 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Desc
         //Cypher does not allow for parameterization of labels, which is why string formatting is used
         String query = String.format("MATCH (n) WHERE id(n) = %s SET n:%s", descriptor.getId(), nodeLabel);
         store.executeQuery(query).close();
-    }
-
-    @Override
-    public boolean accepts(FileResource fileResource, String s, Scope scope) throws IOException {
-        return s.endsWith(".g4");
     }
 }
