@@ -30,10 +30,11 @@ public class AntlrAnalyzer {
     private final String grammarRoot;
     private final File grammarFile;
 
-    public AntlrAnalyzer(String grammarName, String grammarRoot, File grammarFile) {
-        this.grammarName = grammarName;
-        this.grammarRoot = grammarRoot;
+    public AntlrAnalyzer(File grammarFile) {
         this.grammarFile = grammarFile;
+        String path = grammarFile.getAbsolutePath();
+        this.grammarName = path.substring(path.lastIndexOf('/') + 1, path.lastIndexOf('.'));
+        this.grammarRoot = grammarName.substring(0, 1).toLowerCase() + grammarName.substring(1);
     }
 
     public String generateLexerAndParser() {
@@ -89,7 +90,7 @@ public class AntlrAnalyzer {
         CommonTokenStream tokenStream = new CommonTokenStream((TokenSource) lexerObject);
         Object parserInstance = parserClass.getDeclaredConstructors()[0].newInstance(tokenStream);
 
-        Method method = parserClass.getMethod(grammarRoot.substring(0, 1).toLowerCase() + grammarRoot.substring(1));
+        Method method = parserClass.getMethod(grammarRoot);
         Object returnValue = method.invoke(parserInstance);
 
         //TODO Verify that this works

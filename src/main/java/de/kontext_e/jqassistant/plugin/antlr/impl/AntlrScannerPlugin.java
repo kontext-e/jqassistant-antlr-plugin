@@ -41,13 +41,11 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
 
     @Override
     public AntlrDescriptor scan(FileResource fileResource, String path, Scope scope, Scanner scanner) throws IOException {
-        String grammarName = path.substring(path.lastIndexOf('/') + 1, path.lastIndexOf('.'));
-        File grammarFile = new File(path);
-        File parsedFile = new File("C:/Users/WilThi/IdeaProjects/jqassistant-antlr-plugin/src/test/resources/logging/output.logging");
+        File grammarFile = fileResource.getFile();
 
         store = scanner.getContext().getStore();
 
-        antlrAnalyzer = new AntlrAnalyzer(grammarName, "log", grammarFile);
+        antlrAnalyzer = new AntlrAnalyzer(grammarFile);
         String lexerAndParserLocation = antlrAnalyzer.generateLexerAndParser();
 
         URL lexerAndParserURL = new File(lexerAndParserLocation).toURI().toURL();
