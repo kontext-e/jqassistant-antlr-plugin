@@ -8,6 +8,8 @@ import com.buschmais.jqassistant.plugin.common.api.scanner.AbstractScannerPlugin
 import com.buschmais.jqassistant.plugin.common.api.scanner.filesystem.FileResource;
 import de.kontext_e.jqassistant.plugin.antlr.api.model.AntlrDescriptor;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,8 +25,11 @@ import java.util.stream.Stream;
 
 public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, AntlrDescriptor> {
 
-    public static final String CREATE_NODES_CONTAINING_EMPTY_TEXT = "jqassistant.plugin.antlr.createNodesContainingEmptyText";
-    public static final String GRAMMAR_PROPERTY = "\"jqassistant.plugin.antlr.grammars\"";
+    private static final Logger LOGGER = LoggerFactory.getLogger(AntlrScannerPlugin.class);
+
+    private static final String CREATE_NODES_CONTAINING_EMPTY_TEXT = "jqassistant.plugin.antlr.createNodesContainingEmptyText";
+    private static final String GRAMMAR_PROPERTY = "\"jqassistant.plugin.antlr.grammars\"";
+
     private boolean createEmptyNodes;
     private Map<String, Map<String, String>> grammarConfigurations = new HashMap<>();
 
@@ -41,6 +46,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
     private HashMap<String, Map<String, String>> getGrammarConfigurations() {
         HashMap<String, Map<String, String>> grammarConfigurations = new HashMap<>();
         Map<String, Object> properties = getProperties();
+
         int i = 0;
         while (true){
             String grammarFile = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].grammar");
@@ -71,10 +77,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
     @Override
     public AntlrDescriptor scan(FileResource fileResource, String path, Scope scope, Scanner scanner) throws IOException {
         File grammarFile = fileResource.getFile();
-
         store = scanner.getContext().getStore();
-        FileDescriptor fileDescriptor = scanner.getContext().getCurrentDescriptor();
-        AntlrDescriptor antlrDescriptor = store.addDescriptorType(fileDescriptor, AntlrDescriptor.class);
 
         antlrAnalyzer = new AntlrAnalyzer(grammarFile, grammarConfigurations.get(grammarFile.getName()));
         String lexerAndParserLocation = antlrAnalyzer.generateLexerAndParser();
@@ -90,13 +93,10 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
             }
         }
 
-        try (var dirStream = Files.walk(Paths.get(lexerAndParserLocation))) {
-            dirStream.map(Path::toFile)
-                     .sorted(Comparator.reverseOrder())
-                     .forEach(File::delete);
-        }
+        deleteGeneratedFiles(lexerAndParserLocation);
 
-        return antlrDescriptor;
+        FileDescriptor fileDescriptor = scanner.getContext().getCurrentDescriptor();
+        return store.addDescriptorType(fileDescriptor, AntlrDescriptor.class);
     }
 
     private List<File> getFilesToBeParsed(File grammarFile) {
@@ -160,5 +160,15 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
         //Cypher does not allow for parameterization of labels, which is why string formatting is used
         String query = String.format("MATCH (n) WHERE id(n) = %s SET n:%s", descriptor.getId(), nodeLabel);
         store.executeQuery(query).close();
+    }
+
+    private static void deleteGeneratedFiles(String lexerAndParserLocation) {
+        try (var dirStream = Files.walk(Paths.get(lexerAndParserLocation))) {
+            dirStream.map(Path::toFile)
+                    .sorted(Comparator.reverseOrder())
+                    .forEach(File::delete);
+        } catch (IOException e) {
+            LOGGER.warn("Could not delete generated files in: {}", lexerAndParserLocation);
+        }
     }
 }
