@@ -110,7 +110,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
         try (Stream<Path> stream = Files.walk(parent.toPath())){
             stream.filter(path -> path.toString().endsWith(fileEnding)).forEach(path -> files.add(path.toFile()));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            LOGGER.error("An Error occurred while looking for files to be read with grammar: {}, {}", grammarFile.getName(), e.getMessage());
         }
 
         return files;
@@ -122,10 +122,10 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
         try (classLoader){
             return antlrAnalyzer.loadParserAndParseFile(classLoader, parsedFile);
         } catch (IOException e) {
-            System.out.println("There has been an error reading the File to be parsed: " + e.getMessage());
+            LOGGER.error("There has been an error reading the File to be parsed: {}", e.getMessage());
             return parseTrees;
         } catch (Exception e) {
-            System.out.println("There has been an error while loading and executing the parser and lexer: " + e.getMessage());
+            LOGGER.error("There has been an error while loading and executing the parser and lexer: {}", e.getMessage());
             return parseTrees;
         }
     }
