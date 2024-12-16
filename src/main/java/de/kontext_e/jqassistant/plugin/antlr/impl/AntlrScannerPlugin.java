@@ -44,6 +44,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
     }
 
     private HashMap<String, Map<String, String>> getGrammarConfigurations() {
+
         HashMap<String, Map<String, String>> grammarConfigurations = new HashMap<>();
         Map<String, Object> properties = getProperties();
 
@@ -56,12 +57,14 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
             if (grammarFile == null) break;
 
             String grammarName = grammarFile.substring(grammarFile.lastIndexOf(File.separator) + 1, grammarFile.lastIndexOf('.'));
+            if (grammarRoot == null) grammarRoot = grammarName.toLowerCase();
+            if (fileEnding == null) fileEnding = '.' + grammarName.toLowerCase();
+
             Map<String, String> grammarConfiguration = Map.of(
                     "grammarName", grammarName,
                     "grammarRoot", grammarRoot,
                     "fileEnding", fileEnding
             );
-
             grammarConfigurations.put(grammarFile, grammarConfiguration);
 
             i++;
@@ -103,8 +106,8 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
         ArrayList<File> files = new ArrayList<>();
 
         String grammarFileAbsolutePath = grammarFile.getAbsolutePath();
-        String grammarName = grammarFileAbsolutePath.substring(grammarFileAbsolutePath.lastIndexOf(File.separator) + 1, grammarFileAbsolutePath.lastIndexOf('.'));
-        String fileEnding = '.' + grammarName.toLowerCase();
+        String grammarName = grammarFileAbsolutePath.substring(grammarFileAbsolutePath.lastIndexOf(File.separator) + 1);
+        String fileEnding = grammarConfigurations.get(grammarName).get("fileEnding");
 
         File parent = grammarFile.getParentFile();
         try (Stream<Path> stream = Files.walk(parent.toPath())){
