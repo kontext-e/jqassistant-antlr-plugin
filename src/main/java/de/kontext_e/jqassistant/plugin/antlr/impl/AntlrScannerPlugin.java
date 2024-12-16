@@ -13,8 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -85,12 +83,9 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
         antlrAnalyzer = new AntlrAnalyzer(grammarFile, grammarConfigurations.get(grammarFile.getName()));
         String lexerAndParserLocation = antlrAnalyzer.generateLexerAndParser();
 
-        URL lexerAndParserURL = new File(lexerAndParserLocation).toURI().toURL();
-        URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{lexerAndParserURL});
-
         List<File> filesToBeParsed = getFilesToBeParsed(grammarFile);
         for (File fileToBeParsed : filesToBeParsed) {
-            List<ParseTree> parseTrees = loadParserAndParseFile(classLoader, fileToBeParsed);
+            List<ParseTree> parseTrees = loadParserAndParseFile(lexerAndParserLocation, fileToBeParsed);
             for (ParseTree parseTree : parseTrees) {
                 saveParseTreeToNeo4J(null, parseTree);
             }
@@ -119,18 +114,17 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
         return files;
     }
 
-    private List<ParseTree> loadParserAndParseFile(URLClassLoader classLoader, File parsedFile) {
-        List<ParseTree> parseTrees = new ArrayList<>();
-
-        try (classLoader){
-            return antlrAnalyzer.loadParserAndParseFile(classLoader, parsedFile);
+    private List<ParseTree> loadParserAndParseFile(String lexerAndParserLocation, File parsedFile) {
+        try {
+            return antlrAnalyzer.loadParserAndParseFile(lexerAndParserLocation, parsedFile);
         } catch (IOException e) {
             LOGGER.error("There has been an error reading the File to be parsed: {}", e.getMessage());
-            return parseTrees;
+        } catch (NoSuchMethodException e) {
+            LOGGER.error("Method to get parse tree root not found in parser. Does the configured grammar root match the actual grammar root? {}", e.getMessage());
         } catch (Exception e) {
             LOGGER.error("There has been an error while loading and executing the parser and lexer: {}", e.getMessage());
-            return parseTrees;
         }
+        return new ArrayList<>();
     }
 
     private void saveParseTreeToNeo4J(AntlrDescriptor parent, ParseTree parseTree) {

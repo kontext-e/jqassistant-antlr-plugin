@@ -16,6 +16,8 @@ import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -78,8 +80,11 @@ public class AntlrAnalyzer {
     }
 
     @SuppressWarnings("unchecked")
-    public List<ParseTree> loadParserAndParseFile(ClassLoader classLoader, File file) throws ClassNotFoundException, IOException,
+    public List<ParseTree> loadParserAndParseFile(String lexerAndParserLocation, File file) throws ClassNotFoundException, IOException,
             InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException, NoSuchFieldException {
+
+        URL lexerAndParserURL = new File(lexerAndParserLocation).toURI().toURL();
+        URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{lexerAndParserURL});
 
         Class<?> parserClass = Class.forName(grammarName + "Parser", true, classLoader);
         Class<?> lexerClass = Class.forName(grammarName + "Lexer", true, classLoader);
@@ -96,6 +101,7 @@ public class AntlrAnalyzer {
         Class<?> contextClass = Class.forName(grammarName + "Parser$" + rootContextClassName + "Context", true, classLoader);
         Field children = contextClass.getSuperclass().getDeclaredField("children");
 
+        classLoader.close();
         Object parseTrees = children.get(returnValue);
         return (List<ParseTree>) parseTrees;
     }
