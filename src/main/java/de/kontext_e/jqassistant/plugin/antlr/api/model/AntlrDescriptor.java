@@ -7,6 +7,7 @@ import com.buschmais.xo.neo4j.api.annotation.Relation;
 import java.util.List;
 
 @Label("Antlr")
+@SuppressWarnings("unused")
 public interface AntlrDescriptor extends Descriptor {
 
     String getText();

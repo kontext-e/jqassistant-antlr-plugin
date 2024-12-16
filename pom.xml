@@ -43,12 +43,6 @@
             <version>4.13.2</version>
         </dependency>
         <dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy-all</artifactId>
-            <version>3.0.15</version>
-            <type>pom</type>
-        </dependency>
-        <dependency>
             <groupId>com.buschmais.jqassistant.core</groupId>
             <artifactId>scanner</artifactId>
             <version>2.5.0</version>
@@ -74,12 +68,6 @@
             <version>2.5.0</version>
             <scope>test</scope>
         </dependency>
-
-
-
-
-
-
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
