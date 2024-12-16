@@ -6,3 +6,6 @@ jqassistant:
         - grammar: 'Logging.g4'
           grammarRoot: 'log'
           fileEnding: '.logging'
+        - grammar: 'DOT.g4'
+          grammarRoot: 'graph'
+          fileEnding: '.dot'
