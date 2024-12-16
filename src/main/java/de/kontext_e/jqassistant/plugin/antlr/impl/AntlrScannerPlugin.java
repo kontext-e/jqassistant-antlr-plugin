@@ -14,9 +14,7 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -24,20 +22,47 @@ import java.util.stream.Stream;
 public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, AntlrDescriptor> {
 
     public static final String CREATE_NODES_CONTAINING_EMPTY_TEXT = "jqassistant.plugin.antlr.createNodesContainingEmptyText";
+    public static final String GRAMMAR_PROPERTY = "\"jqassistant.plugin.antlr.grammars\"";
     private boolean createEmptyNodes;
+    private Map<String, Map<String, String>> grammarConfigurations = new HashMap<>();
 
     private Store store;
     private AntlrAnalyzer antlrAnalyzer;
 
     @Override
     protected void configure() {
-        String property = getProperty(CREATE_NODES_CONTAINING_EMPTY_TEXT, String.class);
-        createEmptyNodes = Set.of("true", "yes", "on").contains(property.toLowerCase());
+        createEmptyNodes = getBooleanProperty(CREATE_NODES_CONTAINING_EMPTY_TEXT, true);
+        grammarConfigurations = getGrammarConfigurations();
         super.configure();
     }
 
+    private HashMap<String, Map<String, String>> getGrammarConfigurations() {
+        HashMap<String, Map<String, String>> grammarConfigurations = new HashMap<>();
+        Map<String, Object> properties = getProperties();
+        int i = 0;
+        while (true){
+            String grammarFile = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].grammar");
+            String grammarRoot = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].grammarRoot");
+            String fileEnding = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].fileEnding");
+
+            if (grammarFile == null) break;
+
+            String grammarName = grammarFile.substring(grammarFile.lastIndexOf(File.separator) + 1, grammarFile.lastIndexOf('.'));
+            Map<String, String> grammarConfiguration = Map.of(
+                    "grammarName", grammarName,
+                    "grammarRoot", grammarRoot,
+                    "fileEnding", fileEnding
+            );
+
+            grammarConfigurations.put(grammarFile, grammarConfiguration);
+
+            i++;
+        }
+        return grammarConfigurations;
+    }
+
     @Override
-    public boolean accepts(FileResource fileResource, String s, Scope scope) throws IOException {
+    public boolean accepts(FileResource fileResource, String s, Scope scope) {
         return s.endsWith(".g4");
     }
 
@@ -47,7 +72,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
 
         store = scanner.getContext().getStore();
 
-        antlrAnalyzer = new AntlrAnalyzer(grammarFile);
+        antlrAnalyzer = new AntlrAnalyzer(grammarFile, grammarConfigurations.get(grammarFile.getName()));
         String lexerAndParserLocation = antlrAnalyzer.generateLexerAndParser();
 
         URL lexerAndParserURL = new File(lexerAndParserLocation).toURI().toURL();
@@ -60,6 +85,8 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
                 saveParseTreeToNeo4J(null, parseTree);
             }
         }
+
+
 
         //TODO
         return null;

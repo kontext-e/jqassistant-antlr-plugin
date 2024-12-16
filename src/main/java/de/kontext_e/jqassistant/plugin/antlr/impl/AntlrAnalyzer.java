@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -30,11 +31,10 @@ public class AntlrAnalyzer {
     private final String grammarRoot;
     private final File grammarFile;
 
-    public AntlrAnalyzer(File grammarFile) {
+    public AntlrAnalyzer(File grammarFile, Map<String, String> grammarConfiguration) {
         this.grammarFile = grammarFile;
-        String path = grammarFile.getAbsolutePath();
-        this.grammarName = path.substring(path.lastIndexOf(File.separator) + 1, path.lastIndexOf('.'));
-        this.grammarRoot = grammarName.substring(0, 1).toLowerCase() + grammarName.substring(1);
+        this.grammarName = grammarConfiguration.get("grammarName");
+        this.grammarRoot = grammarConfiguration.get("grammarRoot");
     }
 
     public String generateLexerAndParser() {
