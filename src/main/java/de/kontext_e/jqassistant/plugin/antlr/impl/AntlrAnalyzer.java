@@ -37,7 +37,7 @@ public class AntlrAnalyzer {
         this.grammarRoot = grammarConfiguration.get("grammarRoot");
     }
 
-    public String generateLexerAndParser() {
+    public String generateLexerAndParser() throws IOException {
         String lexerAndParserLocation = generateParser(grammarFile);
         compileJavaFiles(findJavaFilesInDirectory(lexerAndParserLocation));
         return lexerAndParserLocation;
@@ -58,15 +58,13 @@ public class AntlrAnalyzer {
         return outputDirectory;
     }
 
-    private static List<String> findJavaFilesInDirectory(String lexerParserDirectory) {
+    private static List<String> findJavaFilesInDirectory(String lexerParserDirectory) throws IOException {
         List<String> sourceFiles;
         try (Stream<Path> walk = Files.walk(Paths.get(lexerParserDirectory))) {
             sourceFiles = walk.filter(p -> !Files.isDirectory(p))
                     .map(Path::toString)
                     .filter(p -> p.endsWith(".java"))
                     .collect(Collectors.toList());
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
         return sourceFiles;
     }
