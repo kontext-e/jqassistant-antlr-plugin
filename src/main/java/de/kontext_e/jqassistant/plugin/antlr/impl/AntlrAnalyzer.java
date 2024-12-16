@@ -33,19 +33,19 @@ public class AntlrAnalyzer {
     public AntlrAnalyzer(File grammarFile) {
         this.grammarFile = grammarFile;
         String path = grammarFile.getAbsolutePath();
-        this.grammarName = path.substring(path.lastIndexOf('/') + 1, path.lastIndexOf('.'));
+        this.grammarName = path.substring(path.lastIndexOf(File.separator) + 1, path.lastIndexOf('.'));
         this.grammarRoot = grammarName.substring(0, 1).toLowerCase() + grammarName.substring(1);
     }
 
     public String generateLexerAndParser() {
         String lexerAndParserLocation = generateParser(grammarFile);
-        List<String> javaFiles = findFilesWithSuffixInDirectory(lexerAndParserLocation);
-        compileJavaFiles(javaFiles);
+        compileJavaFiles(findJavaFilesInDirectory(lexerAndParserLocation));
         return lexerAndParserLocation;
     }
 
     private static String generateParser(File grammarFile) {
-        String outputDirectory = grammarFile.getParentFile().getAbsolutePath() + "/.antlrPlugin";
+        String outputDirectory = grammarFile.getParentFile().getAbsolutePath() + File.separator + ".antlrPlugin";
+        new File(outputDirectory).mkdirs();
 
         List<String> arguments = new ArrayList<>();
         arguments.add(grammarFile.getAbsolutePath());
@@ -58,7 +58,7 @@ public class AntlrAnalyzer {
         return outputDirectory;
     }
 
-    private static List<String> findFilesWithSuffixInDirectory(String lexerParserDirectory) {
+    private static List<String> findJavaFilesInDirectory(String lexerParserDirectory) {
         List<String> sourceFiles;
         try (Stream<Path> walk = Files.walk(Paths.get(lexerParserDirectory))) {
             sourceFiles = walk.filter(p -> !Files.isDirectory(p))

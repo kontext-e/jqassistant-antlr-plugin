@@ -12,20 +12,22 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, AntlrDescriptor> {
 
     public static final String CREATE_NODES_CONTAINING_EMPTY_TEXT = "jqassistant.plugin.antlr.createNodesContainingEmptyText";
-
-    private AntlrAnalyzer antlrAnalyzer;
+    private boolean createEmptyNodes;
 
     private Store store;
-    private boolean createEmptyNodes;
+    private AntlrAnalyzer antlrAnalyzer;
 
     @Override
     protected void configure() {
@@ -50,14 +52,34 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
 
         URL lexerAndParserURL = new File(lexerAndParserLocation).toURI().toURL();
         URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{lexerAndParserURL});
-        List<ParseTree> parseTrees = loadParserAndParseFile(classLoader, parsedFile);
 
-        for (ParseTree parseTree : parseTrees) {
-            iterateOverParseTree(null, parseTree);
+        List<File> filesToBeParsed = getFilesToBeParsed(grammarFile);
+        for (File fileToBeParsed : filesToBeParsed) {
+            List<ParseTree> parseTrees = loadParserAndParseFile(classLoader, fileToBeParsed);
+            for (ParseTree parseTree : parseTrees) {
+                saveParseTreeToNeo4J(null, parseTree);
+            }
         }
 
         //TODO
         return null;
+    }
+
+    private List<File> getFilesToBeParsed(File grammarFile) {
+        ArrayList<File> files = new ArrayList<>();
+
+        String grammarFileAbsolutePath = grammarFile.getAbsolutePath();
+        String grammarName = grammarFileAbsolutePath.substring(grammarFileAbsolutePath.lastIndexOf(File.separator) + 1, grammarFileAbsolutePath.lastIndexOf('.'));
+        String fileEnding = '.' + grammarName.toLowerCase();
+
+        File parent = grammarFile.getParentFile();
+        try (Stream<Path> stream = Files.walk(parent.toPath())){
+            stream.filter(path -> path.toString().endsWith(fileEnding)).forEach(path -> files.add(path.toFile()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        return files;
     }
 
     private List<ParseTree> loadParserAndParseFile(URLClassLoader classLoader, File parsedFile) {
@@ -74,7 +96,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
         }
     }
 
-    private void iterateOverParseTree(AntlrDescriptor parent, ParseTree parseTree) {
+    private void saveParseTreeToNeo4J(AntlrDescriptor parent, ParseTree parseTree) {
         if (parseTree.getText().isBlank() && !createEmptyNodes) return;
 
         AntlrDescriptor node = createDescriptor(parseTree);
@@ -84,7 +106,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
 
         for (int i = 0; i < parseTree.getChildCount(); i++) {
             ParseTree child = parseTree.getChild(i);
-            iterateOverParseTree(node, child);
+            saveParseTreeToNeo4J(node, child);
         }
     }
 
