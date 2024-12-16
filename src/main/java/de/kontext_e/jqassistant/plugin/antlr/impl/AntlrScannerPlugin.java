@@ -3,6 +3,7 @@ package de.kontext_e.jqassistant.plugin.antlr.impl;
 import com.buschmais.jqassistant.core.scanner.api.Scanner;
 import com.buschmais.jqassistant.core.scanner.api.Scope;
 import com.buschmais.jqassistant.core.store.api.Store;
+import com.buschmais.jqassistant.plugin.common.api.model.FileDescriptor;
 import com.buschmais.jqassistant.plugin.common.api.scanner.AbstractScannerPlugin;
 import com.buschmais.jqassistant.plugin.common.api.scanner.filesystem.FileResource;
 import de.kontext_e.jqassistant.plugin.antlr.api.model.AntlrDescriptor;
@@ -72,6 +73,8 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
         File grammarFile = fileResource.getFile();
 
         store = scanner.getContext().getStore();
+        FileDescriptor fileDescriptor = scanner.getContext().getCurrentDescriptor();
+        AntlrDescriptor antlrDescriptor = store.addDescriptorType(fileDescriptor, AntlrDescriptor.class);
 
         antlrAnalyzer = new AntlrAnalyzer(grammarFile, grammarConfigurations.get(grammarFile.getName()));
         String lexerAndParserLocation = antlrAnalyzer.generateLexerAndParser();
@@ -93,8 +96,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
                      .forEach(File::delete);
         }
 
-        //TODO
-        return null;
+        return antlrDescriptor;
     }
 
     private List<File> getFilesToBeParsed(File grammarFile) {
