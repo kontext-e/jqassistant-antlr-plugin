@@ -12,6 +12,7 @@ class AntlrScannerPluginTest extends AbstractPluginIT {
     void scan() {
         File file = new File("src/test/resources/logging/Logging.g4");
         File file2 = new File("src/test/resources/dot/DOT.g4");
+        File file3 = new File("src/test/resources/calculator/calculator.g4");
 
         Map<String, Object> properties = Map.of(
                 "jqassistant.plugin.antlr.createNodesContainingEmptyText", true,
@@ -20,10 +21,14 @@ class AntlrScannerPluginTest extends AbstractPluginIT {
                 "\"jqassistant.plugin.antlr.grammars\"[0].fileEnding", ".logging",
                 "\"jqassistant.plugin.antlr.grammars\"[1].grammar", "DOT.g4",
                 "\"jqassistant.plugin.antlr.grammars\"[1].grammarRoot", "graph",
-                "\"jqassistant.plugin.antlr.grammars\"[1].fileEnding", ".dot"
+                "\"jqassistant.plugin.antlr.grammars\"[1].fileEnding", ".dot",
+                "\"jqassistant.plugin.antlr.grammars\"[2].grammar", "calculator.g4",
+                "\"jqassistant.plugin.antlr.grammars\"[2].grammarRoot", "equation",
+                "\"jqassistant.plugin.antlr.grammars\"[2].fileEnding", ".txt"
         );
 //        getScanner(properties).scan(file, "/Logging.g4", null);
-        getScanner(properties).scan(file2, "/calculator.g4", null);
+//        getScanner(properties).scan(file2, "/DOT.g4", null);
+        getScanner(properties).scan(file3, "/calculator.g4", null);
 
         store.beginTransaction();
         Query.Result<Query.Result.CompositeRowObject> result = store.executeQuery("MATCH (n:Antlr) RETURN n");
