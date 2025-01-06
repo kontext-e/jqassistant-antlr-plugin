@@ -26,9 +26,11 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
     private static final Logger LOGGER = LoggerFactory.getLogger(AntlrScannerPlugin.class);
 
     private static final String CREATE_NODES_CONTAINING_EMPTY_TEXT = "jqassistant.plugin.antlr.createNodesContainingEmptyText";
+    private static final String DELETE_PARSER_AND_LEXER_AFTER_SCAN = "jqassistant.plugin.antlr.deleteParserAndLexerAfterScan";
     private static final String GRAMMAR_PROPERTY = "\"jqassistant.plugin.antlr.grammars\"";
 
     private boolean createEmptyNodes;
+    private boolean deleteParserAndLexerAfterScan;
     private Map<String, Map<String, String>> grammarConfigurations = new HashMap<>();
 
     private Store store;
@@ -37,6 +39,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
     @Override
     protected void configure() {
         createEmptyNodes = getBooleanProperty(CREATE_NODES_CONTAINING_EMPTY_TEXT, true);
+        deleteParserAndLexerAfterScan = getBooleanProperty(DELETE_PARSER_AND_LEXER_AFTER_SCAN, false);
         grammarConfigurations = getGrammarConfigurations();
         super.configure();
     }
@@ -91,7 +94,9 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
             }
         }
 
-        deleteGeneratedFiles(lexerAndParserLocation);
+        if (deleteParserAndLexerAfterScan) {
+            deleteGeneratedFiles(lexerAndParserLocation);
+        }
 
         FileDescriptor fileDescriptor = scanner.getContext().getCurrentDescriptor();
         return store.addDescriptorType(fileDescriptor, AntlrDescriptor.class);
