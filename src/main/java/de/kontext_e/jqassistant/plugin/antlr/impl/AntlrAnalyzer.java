@@ -45,19 +45,23 @@ public class AntlrAnalyzer {
         return lexerAndParserLocation;
     }
 
-    private static String generateParser(File grammarFile) {
-        String outputDirectory = grammarFile.getParentFile().getAbsolutePath() + File.separator + ".antlrPlugin";
-        new File(outputDirectory).mkdirs();
+    private static String generateParser(File grammarFile) throws IOException {
+        String outputPath = grammarFile.getParentFile().getAbsolutePath() + File.separator + ".antlrPlugin";
+        File outputDirectory = new File(outputPath);
+        if (outputDirectory.exists() && outputDirectory.listFiles() != null) { return outputPath; }
+
+        boolean createdOutputDirectory = outputDirectory.mkdirs();
+        if (!createdOutputDirectory) { throw new IOException("Error creating output directory: " + outputDirectory); }
 
         List<String> arguments = new ArrayList<>();
         arguments.add(grammarFile.getAbsolutePath());
         arguments.add("-o");
-        arguments.add(outputDirectory);
+        arguments.add(outputPath);
 
         Tool tool = new Tool(arguments.toArray(new String[0]));
         tool.processGrammarsOnCommandLine();
 
-        return outputDirectory;
+        return outputPath;
     }
 
     private static List<String> findJavaFilesInDirectory(String lexerParserDirectory) throws IOException {
