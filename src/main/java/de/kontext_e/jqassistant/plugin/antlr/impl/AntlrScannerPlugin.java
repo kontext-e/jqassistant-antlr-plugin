@@ -15,10 +15,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, AntlrDescriptor> {
@@ -33,7 +33,6 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
     private boolean deleteParserAndLexerAfterScan;
     private Map<String, Map<String, String>> grammarConfigurations = new HashMap<>();
 
-    private Store store;
     private AntlrTool antlrTool;
 
     @Override
@@ -81,21 +80,20 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
     @Override
     public AntlrDescriptor scan(FileResource fileResource, String path, Scope scope, Scanner scanner) throws IOException {
         File grammarFile = fileResource.getFile();
-        store = scanner.getContext().getStore();
+        Store store = scanner.getContext().getStore();
 
         antlrTool = new AntlrTool(grammarFile, grammarConfigurations.get(grammarFile.getName()));
         String lexerAndParserLocation = antlrTool.generateLexerAndParser();
 
+        ParseTreeSaver parseTreeSaver = new ParseTreeSaver(store, createEmptyNodes);
         List<File> filesToBeParsed = getFilesToBeParsed(grammarFile);
         for (File fileToBeParsed : filesToBeParsed) {
             List<ParseTree> parseTrees = loadParserAndParseFile(lexerAndParserLocation, fileToBeParsed);
-            for (ParseTree parseTree : parseTrees) {
-                saveParseTreeToNeo4J(null, parseTree);
-            }
+            parseTreeSaver.saveParseTreesToNeo4J(parseTrees);
         }
 
         if (deleteParserAndLexerAfterScan) {
-            deleteGeneratedFiles(lexerAndParserLocation);
+            parseTreeSaver.deleteGeneratedFiles(lexerAndParserLocation);
         }
 
         FileDescriptor fileDescriptor = scanner.getContext().getCurrentDescriptor();
@@ -131,47 +129,5 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
             LOGGER.error("There has been an error while loading and executing the parser and lexer: {}", e.getMessage());
         }
         return new ArrayList<>();
-    }
-
-    private void saveParseTreeToNeo4J(AntlrDescriptor parent, ParseTree parseTree) {
-        if (parseTree.getText().isBlank() && !createEmptyNodes) return;
-
-        AntlrDescriptor node = createDescriptor(parseTree);
-        if (parent != null) {
-            parent.getChildren().add(node);
-        }
-
-        for (int i = 0; i < parseTree.getChildCount(); i++) {
-            ParseTree child = parseTree.getChild(i);
-            saveParseTreeToNeo4J(node, child);
-        }
-    }
-
-    private AntlrDescriptor createDescriptor(ParseTree parseTree) {
-        AntlrDescriptor descriptor = store.create(AntlrDescriptor.class);
-        descriptor.setText(parseTree.getText());
-        addCustomLabelToDescriptor(descriptor, parseTree);
-
-        return descriptor;
-    }
-
-    private void addCustomLabelToDescriptor(AntlrDescriptor descriptor, ParseTree parseTree) {
-        String className = parseTree.getClass().getName();
-        Matcher matcher = Pattern.compile("\\$(.*?)Context").matcher(className);
-        String nodeLabel = matcher.find() ? matcher.group(1) : "TerminalNode";
-
-        //Cypher does not allow for parameterization of labels, which is why string formatting is used
-        String query = String.format("MATCH (n) WHERE id(n) = %s SET n:%s", descriptor.getId(), nodeLabel);
-        store.executeQuery(query).close();
-    }
-
-    private static void deleteGeneratedFiles(String lexerAndParserLocation) {
-        try (var dirStream = Files.walk(Paths.get(lexerAndParserLocation))) {
-            dirStream.map(Path::toFile)
-                    .sorted(Comparator.reverseOrder())
-                    .forEach(File::delete);
-        } catch (IOException e) {
-            LOGGER.warn("Could not delete generated files in: {}", lexerAndParserLocation);
-        }
     }
 }
