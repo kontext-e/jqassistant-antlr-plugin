@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -41,8 +42,16 @@ public class AntlrTool {
 
     public String generateLexerAndParser() throws IOException {
         String lexerAndParserLocation = generateParser(grammarFile);
-        compileJavaFiles(findJavaFilesInDirectory(lexerAndParserLocation));
+        if (!classFilesFoundInDirectory(lexerAndParserLocation)) {
+            compileJavaFiles(findJavaFilesInDirectory(lexerAndParserLocation));
+        }
         return lexerAndParserLocation;
+    }
+
+    private static boolean classFilesFoundInDirectory(String lexerAndParserLocation) {
+        File[] files = new File(lexerAndParserLocation).listFiles();
+        if (files == null) return false;
+        return Arrays.stream(files).anyMatch(file -> file.getName().endsWith(".class"));
     }
 
     private static String generateParser(File grammarFile) throws IOException {
