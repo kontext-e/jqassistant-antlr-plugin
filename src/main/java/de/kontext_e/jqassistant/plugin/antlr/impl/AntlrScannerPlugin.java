@@ -25,12 +25,16 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AntlrScannerPlugin.class);
 
-    private static final String CREATE_NODES_CONTAINING_EMPTY_TEXT = "jqassistant.plugin.antlr.createNodesContainingEmptyText";
-    private static final String DELETE_PARSER_AND_LEXER_AFTER_SCAN = "jqassistant.plugin.antlr.deleteParserAndLexerAfterScan";
+    private static final String PLUGIN_PROPERTY_PREFIX = "jqassistant.plugin.antlr.";
+    private static final String CREATE_NODES_CONTAINING_EMPTY_TEXT = PLUGIN_PROPERTY_PREFIX + "createNodesContainingEmptyText";
+    private static final String DELETE_PARSER_AND_LEXER_AFTER_SCAN = PLUGIN_PROPERTY_PREFIX + "deleteParserAndLexerAfterScan";
+    private static final String READ_ONLY_CONFIGURED_GRAMMARS = PLUGIN_PROPERTY_PREFIX + "readOnlyConfiguredGrammars";
+
     private static final String GRAMMAR_PROPERTY = "\"jqassistant.plugin.antlr.grammars\"";
 
     private boolean createEmptyNodes;
     private boolean deleteParserAndLexerAfterScan;
+    private boolean readOnlyConfiguredGrammars;
     private Map<String, Map<String, String>> grammarConfigurations = new HashMap<>();
 
     private AntlrTool antlrTool;
@@ -39,6 +43,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
     protected void configure() {
         createEmptyNodes = getBooleanProperty(CREATE_NODES_CONTAINING_EMPTY_TEXT, true);
         deleteParserAndLexerAfterScan = getBooleanProperty(DELETE_PARSER_AND_LEXER_AFTER_SCAN, false);
+        readOnlyConfiguredGrammars = getBooleanProperty(READ_ONLY_CONFIGURED_GRAMMARS, false);
         grammarConfigurations = getGrammarConfigurations();
         super.configure();
     }
@@ -56,7 +61,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
 
             if (grammarFile == null) break;
 
-            String grammarName = grammarFile.substring(grammarFile.lastIndexOf(File.separator) + 1, grammarFile.lastIndexOf('.'));
+            String grammarName = getGrammarName(grammarFile);
             if (grammarRoot == null) grammarRoot = grammarName.toLowerCase();
             if (fileExtension == null) fileExtension = '.' + grammarName.toLowerCase();
 
@@ -72,9 +77,17 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
         return grammarConfigurations;
     }
 
+    static String getGrammarName(String grammarFile) {
+        return grammarFile.substring(grammarFile.lastIndexOf(File.separator) + 1, grammarFile.lastIndexOf('.'));
+    }
+
     @Override
-    public boolean accepts(FileResource fileResource, String s, Scope scope) {
-        return s.endsWith(".g4");
+    public boolean accepts(FileResource fileResource, String s, Scope scope) throws IOException {
+        if (readOnlyConfiguredGrammars){
+            return grammarConfigurations.containsKey(fileResource.getFile().getName());
+        } else {
+            return s.endsWith(".g4");
+        }
     }
 
     @Override
