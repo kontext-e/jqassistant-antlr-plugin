@@ -34,7 +34,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
     private Map<String, Map<String, String>> grammarConfigurations = new HashMap<>();
 
     private Store store;
-    private AntlrAnalyzer antlrAnalyzer;
+    private AntlrTool antlrTool;
 
     @Override
     protected void configure() {
@@ -83,8 +83,8 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
         File grammarFile = fileResource.getFile();
         store = scanner.getContext().getStore();
 
-        antlrAnalyzer = new AntlrAnalyzer(grammarFile, grammarConfigurations.get(grammarFile.getName()));
-        String lexerAndParserLocation = antlrAnalyzer.generateLexerAndParser();
+        antlrTool = new AntlrTool(grammarFile, grammarConfigurations.get(grammarFile.getName()));
+        String lexerAndParserLocation = antlrTool.generateLexerAndParser();
 
         List<File> filesToBeParsed = getFilesToBeParsed(grammarFile);
         for (File fileToBeParsed : filesToBeParsed) {
@@ -122,7 +122,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
 
     private List<ParseTree> loadParserAndParseFile(String lexerAndParserLocation, File parsedFile) {
         try {
-            return antlrAnalyzer.loadParserAndParseFile(lexerAndParserLocation, parsedFile);
+            return antlrTool.loadParserAndParseFile(lexerAndParserLocation, parsedFile);
         } catch (IOException e) {
             LOGGER.error("There has been an error reading the File to be parsed: {}", e.getMessage());
         } catch (NoSuchMethodException e) {

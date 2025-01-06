@@ -27,13 +27,13 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class AntlrAnalyzer {
+public class AntlrTool {
 
     private final String grammarName;
     private final String grammarRoot;
     private final File grammarFile;
 
-    public AntlrAnalyzer(File grammarFile, Map<String, String> grammarConfiguration) {
+    public AntlrTool(File grammarFile, Map<String, String> grammarConfiguration) {
         this.grammarFile = grammarFile;
         this.grammarName = grammarConfiguration.get("grammarName");
         this.grammarRoot = grammarConfiguration.get("grammarRoot");
