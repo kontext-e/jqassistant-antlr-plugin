@@ -5,7 +5,7 @@ jqassistant:
       jqassistant.plugin.antlr.grammars:
         - grammar: 'Logging.g4'
           grammarRoot: 'log'
-          fileEnding: '.logging'
+          fileExtension: '.logging'
         - grammar: 'DOT.g4'
           grammarRoot: 'graph'
-          fileEnding: '.dot'
+          fileExtension: '.dot'

@@ -18,13 +18,13 @@ class AntlrScannerPluginTest extends AbstractPluginIT {
                 "jqassistant.plugin.antlr.createNodesContainingEmptyText", true,
                 "\"jqassistant.plugin.antlr.grammars\"[0].grammar", "Logging.g4",
                 "\"jqassistant.plugin.antlr.grammars\"[0].grammarRoot", "log",
-                "\"jqassistant.plugin.antlr.grammars\"[0].fileEnding", ".logging",
+                "\"jqassistant.plugin.antlr.grammars\"[0].fileExtension", ".logging",
                 "\"jqassistant.plugin.antlr.grammars\"[1].grammar", "DOT.g4",
                 "\"jqassistant.plugin.antlr.grammars\"[1].grammarRoot", "graph",
-                "\"jqassistant.plugin.antlr.grammars\"[1].fileEnding", ".dot",
+                "\"jqassistant.plugin.antlr.grammars\"[1].fileExtension", ".dot",
                 "\"jqassistant.plugin.antlr.grammars\"[2].grammar", "calculator.g4",
                 "\"jqassistant.plugin.antlr.grammars\"[2].grammarRoot", "equation",
-                "\"jqassistant.plugin.antlr.grammars\"[2].fileEnding", ".txt"
+                "\"jqassistant.plugin.antlr.grammars\"[2].fileExtension", ".txt"
         );
 //        getScanner(properties).scan(file, "/Logging.g4", null);
 //        getScanner(properties).scan(file2, "/DOT.g4", null);

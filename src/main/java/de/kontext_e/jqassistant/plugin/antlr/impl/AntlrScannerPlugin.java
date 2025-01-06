@@ -50,18 +50,18 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
         while (true){
             String grammarFile = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].grammar");
             String grammarRoot = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].grammarRoot");
-            String fileEnding = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].fileEnding");
+            String fileExtension = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].fileExtension");
 
             if (grammarFile == null) break;
 
             String grammarName = grammarFile.substring(grammarFile.lastIndexOf(File.separator) + 1, grammarFile.lastIndexOf('.'));
             if (grammarRoot == null) grammarRoot = grammarName.toLowerCase();
-            if (fileEnding == null) fileEnding = '.' + grammarName.toLowerCase();
+            if (fileExtension == null) fileExtension = '.' + grammarName.toLowerCase();
 
             Map<String, String> grammarConfiguration = Map.of(
                     "grammarName", grammarName,
                     "grammarRoot", grammarRoot,
-                    "fileEnding", fileEnding
+                    "fileExtension", fileExtension
             );
             grammarConfigurations.put(grammarFile, grammarConfiguration);
 
@@ -102,11 +102,12 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
 
         String grammarFileAbsolutePath = grammarFile.getAbsolutePath();
         String grammarName = grammarFileAbsolutePath.substring(grammarFileAbsolutePath.lastIndexOf(File.separator) + 1);
-        String fileEnding = grammarConfigurations.get(grammarName).get("fileEnding");
+        String fileExtension = grammarConfigurations.get(grammarName).get("fileExtension");
 
         File parent = grammarFile.getParentFile();
         try (Stream<Path> stream = Files.walk(parent.toPath())){
-            stream.filter(path -> path.toString().endsWith(fileEnding)).forEach(path -> files.add(path.toFile()));
+            stream.filter(path -> path.toString().endsWith(fileExtension))
+                  .forEach(path -> files.add(path.toFile()));
         } catch (IOException e) {
             LOGGER.error("An Error occurred while looking for files to be read with grammar: {}, {}", grammarFile.getName(), e.getMessage());
         }
