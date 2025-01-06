@@ -95,7 +95,11 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
         File grammarFile = fileResource.getFile();
         Store store = scanner.getContext().getStore();
 
-        antlrTool = new AntlrTool(grammarFile, grammarConfigurations.get(grammarFile.getName()));
+        Map<String, String> grammarConfiguration = grammarConfigurations.get(grammarFile.getName());
+        if (grammarConfiguration == null) {
+            grammarConfiguration = createNewGrammarConfiguration(grammarFile);
+        }
+        antlrTool = new AntlrTool(grammarFile, grammarConfiguration);
         String lexerAndParserLocation = antlrTool.generateLexerAndParser();
 
         ParseTreeSaver parseTreeSaver = new ParseTreeSaver(store, createEmptyNodes);
@@ -111,6 +115,16 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
 
         FileDescriptor fileDescriptor = scanner.getContext().getCurrentDescriptor();
         return store.addDescriptorType(fileDescriptor, AntlrDescriptor.class);
+    }
+
+    private Map<String, String> createNewGrammarConfiguration(File grammarFile) {
+        Map<String, String> grammarConfiguration = new HashMap<>();
+        String grammarName = getGrammarName(grammarFile.getName());
+        grammarConfiguration.put("grammarName", grammarName);
+        grammarConfiguration.put("grammarRoot", grammarName.toLowerCase());
+        grammarConfiguration.put("fileExtension", "." + grammarName.toLowerCase());
+        grammarConfigurations.put(grammarFile.getName(), grammarConfiguration);
+        return grammarConfiguration;
     }
 
     private List<File> getFilesToBeParsed(File grammarFile) {
