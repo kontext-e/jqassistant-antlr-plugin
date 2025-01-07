@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, AntlrDescriptor> {
+public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, GrammarFileDescriptor> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AntlrScannerPlugin.class);
 
@@ -95,7 +95,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
     }
 
     @Override
-    public AntlrDescriptor scan(FileResource fileResource, String path, Scope scope, Scanner scanner) throws IOException {
+    public GrammarFileDescriptor scan(FileResource fileResource, String path, Scope scope, Scanner scanner) throws IOException {
         File grammarFile = fileResource.getFile();
 
         Map<String, String> grammarConfiguration = grammarConfigurations.get(grammarFile.getName());
