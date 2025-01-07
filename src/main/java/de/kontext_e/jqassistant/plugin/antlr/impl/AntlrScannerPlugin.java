@@ -116,7 +116,9 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
         }
 
         FileDescriptor fileDescriptor = scanner.getContext().getCurrentDescriptor();
-        return store.addDescriptorType(fileDescriptor, AntlrDescriptor.class);
+        GrammarFileDescriptor antlrGrammarDescriptor = store.addDescriptorType(fileDescriptor, GrammarFileDescriptor.class);
+        antlrGrammarDescriptor.setScannedFiles(scannedFiles);
+        return antlrGrammarDescriptor;
     }
 
     private Map<String, String> createNewGrammarConfiguration(File grammarFile) {
