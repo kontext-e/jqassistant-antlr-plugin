@@ -10,9 +10,6 @@ import java.util.List;
 @SuppressWarnings("unused")
 public interface AntlrDescriptor extends Descriptor {
 
-    String getText();
-    void setText(String text);
-
     @Relation("HAS_CHILD")
     List<AntlrDescriptor> getChildren();
     void setChildren(List<AntlrDescriptor> children);

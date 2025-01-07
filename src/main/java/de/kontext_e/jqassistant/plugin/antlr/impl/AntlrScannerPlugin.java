@@ -7,6 +7,8 @@ import com.buschmais.jqassistant.plugin.common.api.model.FileDescriptor;
 import com.buschmais.jqassistant.plugin.common.api.scanner.AbstractScannerPlugin;
 import com.buschmais.jqassistant.plugin.common.api.scanner.filesystem.FileResource;
 import de.kontext_e.jqassistant.plugin.antlr.api.model.AntlrDescriptor;
+import de.kontext_e.jqassistant.plugin.antlr.api.model.GrammarFileDescriptor;
+import de.kontext_e.jqassistant.plugin.antlr.api.model.ScannedFileDescriptor;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +40,8 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
     private Map<String, Map<String, String>> grammarConfigurations = new HashMap<>();
 
     private AntlrTool antlrTool;
+    private Store store;
+    private ParseTreeSaver parseTreeSaver;
 
     @Override
     protected void configure() {
@@ -93,21 +97,19 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
     @Override
     public AntlrDescriptor scan(FileResource fileResource, String path, Scope scope, Scanner scanner) throws IOException {
         File grammarFile = fileResource.getFile();
-        Store store = scanner.getContext().getStore();
 
         Map<String, String> grammarConfiguration = grammarConfigurations.get(grammarFile.getName());
         if (grammarConfiguration == null) {
             grammarConfiguration = createNewGrammarConfiguration(grammarFile);
         }
-        antlrTool = new AntlrTool(grammarFile, grammarConfiguration);
-        String lexerAndParserLocation = antlrTool.generateLexerAndParser();
 
-        ParseTreeSaver parseTreeSaver = new ParseTreeSaver(store, createEmptyNodes);
+        store = scanner.getContext().getStore();
+        parseTreeSaver = new ParseTreeSaver(store, createEmptyNodes);
+        antlrTool = new AntlrTool(grammarFile, grammarConfiguration);
+
+        String lexerAndParserLocation = antlrTool.generateLexerAndParser();
         List<File> filesToBeParsed = getFilesToBeParsed(grammarFile);
-        for (File fileToBeParsed : filesToBeParsed) {
-            List<ParseTree> parseTrees = loadParserAndParseFile(lexerAndParserLocation, fileToBeParsed);
-            parseTreeSaver.saveParseTreesToNeo4J(parseTrees);
-        }
+        List<ScannedFileDescriptor> scannedFiles = parseFilesAndSaveTrees(filesToBeParsed, lexerAndParserLocation);
 
         if (deleteParserAndLexerAfterScan) {
             parseTreeSaver.deleteGeneratedFiles(lexerAndParserLocation);
@@ -143,6 +145,17 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Antl
         }
 
         return files;
+    }
+
+    private List<ScannedFileDescriptor> parseFilesAndSaveTrees(List<File> filesToBeParsed, String lexerAndParserLocation) {
+        List<ScannedFileDescriptor> scannedFiles = new ArrayList<>();
+        for (File fileToBeParsed : filesToBeParsed) {
+            ScannedFileDescriptor scannedFileDescriptor = store.create(ScannedFileDescriptor.class);
+            List<ParseTree> parseTrees = loadParserAndParseFile(lexerAndParserLocation, fileToBeParsed);
+            parseTreeSaver.saveParseTreesToNeo4J(parseTrees, scannedFileDescriptor);
+            scannedFiles.add(scannedFileDescriptor);
+        }
+        return scannedFiles;
     }
 
     private List<ParseTree> loadParserAndParseFile(String lexerAndParserLocation, File parsedFile) {
