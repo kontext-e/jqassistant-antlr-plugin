@@ -6,7 +6,6 @@ import com.buschmais.jqassistant.core.store.api.Store;
 import com.buschmais.jqassistant.plugin.common.api.model.FileDescriptor;
 import com.buschmais.jqassistant.plugin.common.api.scanner.AbstractScannerPlugin;
 import com.buschmais.jqassistant.plugin.common.api.scanner.filesystem.FileResource;
-import de.kontext_e.jqassistant.plugin.antlr.api.model.AntlrDescriptor;
 import de.kontext_e.jqassistant.plugin.antlr.api.model.GrammarFileDescriptor;
 import de.kontext_e.jqassistant.plugin.antlr.api.model.ScannedFileDescriptor;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -31,8 +30,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
     private static final String CREATE_NODES_CONTAINING_EMPTY_TEXT = PLUGIN_PROPERTY_PREFIX + "createNodesContainingEmptyText";
     private static final String DELETE_PARSER_AND_LEXER_AFTER_SCAN = PLUGIN_PROPERTY_PREFIX + "deleteParserAndLexerAfterScan";
     private static final String READ_ONLY_CONFIGURED_GRAMMARS = PLUGIN_PROPERTY_PREFIX + "readOnlyConfiguredGrammars";
-
-    private static final String GRAMMAR_PROPERTY = "\"jqassistant.plugin.antlr.grammars\"";
+    private static final String GRAMMAR_PROPERTY = "\"" + PLUGIN_PROPERTY_PREFIX + "grammars\"";
 
     private boolean createEmptyNodes;
     private boolean deleteParserAndLexerAfterScan;
@@ -110,6 +108,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
         String lexerAndParserLocation = antlrTool.generateLexerAndParser();
         List<File> filesToBeParsed = getFilesToBeParsed(grammarFile);
         List<ScannedFileDescriptor> scannedFiles = parseFilesAndSaveTrees(filesToBeParsed, lexerAndParserLocation);
+        addGrammarRootNameToScannedFiles(scannedFiles, grammarConfiguration.get("grammarRoot"));
 
         if (deleteParserAndLexerAfterScan) {
             parseTreeSaver.deleteGeneratedFiles(lexerAndParserLocation);
@@ -119,6 +118,18 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
         GrammarFileDescriptor antlrGrammarDescriptor = store.addDescriptorType(fileDescriptor, GrammarFileDescriptor.class);
         antlrGrammarDescriptor.setScannedFiles(scannedFiles);
         return antlrGrammarDescriptor;
+    }
+
+    private void addGrammarRootNameToScannedFiles(List<ScannedFileDescriptor> scannedFiles, String grammarRoot) {
+        for (ScannedFileDescriptor scannedFile : scannedFiles) {
+            String queryTemplate = "MATCH (n) WHERE id(n) = %s SET n:%s";
+            String query = String.format(queryTemplate, scannedFile.getId(), capitalizeFirstLetter(grammarRoot));
+            store.executeQuery(query).close();
+        }
+    }
+
+    private String capitalizeFirstLetter(String string) {
+        return string.substring(0, 1).toUpperCase() + string.substring(1);
     }
 
     private Map<String, String> createNewGrammarConfiguration(File grammarFile) {
