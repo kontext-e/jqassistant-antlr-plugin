@@ -161,10 +161,12 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
     private List<ScannedFileDescriptor> parseFilesAndSaveTrees(List<File> filesToBeParsed, String lexerAndParserLocation) {
         List<ScannedFileDescriptor> scannedFiles = new ArrayList<>();
         for (File fileToBeParsed : filesToBeParsed) {
-            ScannedFileDescriptor scannedFileDescriptor = store.create(ScannedFileDescriptor.class);
             List<ParseTree> parseTrees = loadParserAndParseFile(lexerAndParserLocation, fileToBeParsed);
-            parseTreeSaver.saveParseTreesToNeo4J(parseTrees, scannedFileDescriptor);
-            scannedFiles.add(scannedFileDescriptor);
+            if (!parseTrees.isEmpty()) {
+                ScannedFileDescriptor scannedFileDescriptor = store.create(ScannedFileDescriptor.class);
+                parseTreeSaver.saveParseTreesToNeo4J(parseTrees, scannedFileDescriptor);
+                scannedFiles.add(scannedFileDescriptor);
+            }
         }
         return scannedFiles;
     }

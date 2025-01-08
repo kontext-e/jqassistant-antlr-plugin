@@ -12,6 +12,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -115,7 +116,8 @@ public class ConfigurationIT extends AbstractPluginIT {
         var tempGrammarFile = tempDir.resolve("DOT.g4").toFile();
 
         // Copy the directory recursively
-        Files.walk(lexerAndParserDirectory.toPath()).forEach(sourcePath -> {
+        Stream<Path> fileWalker = Files.walk(lexerAndParserDirectory.toPath());
+        fileWalker.forEach(sourcePath -> {
             try {
                 Path targetPath = tempDir.resolve(lexerAndParserDirectory.toPath().relativize(sourcePath));
                 if (Files.isDirectory(sourcePath)) {
@@ -127,8 +129,45 @@ public class ConfigurationIT extends AbstractPluginIT {
                 throw new RuntimeException(e);
             }
         });
+        fileWalker.close();
         return tempGrammarFile;
     }
 
+    @Test
+    void testPartialConfiguration(){
+        var file = new File("src/test/resources/dot/DOT.g4");
+        var fileDescriptor = store.create(FileDescriptor.class);
+        Map<String, Object> properties = Map.of(
+                "jqassistant.plugin.antlr.readOnlyConfiguredGrammars", "true",
+                "\"jqassistant.plugin.antlr.grammars\"[0].grammar", "DOT.g4",
+                "\"jqassistant.plugin.antlr.grammars\"[0].grammarRoot", "graph"
+        );
+
+        getScanner(properties).scan(file, fileDescriptor, file.getAbsolutePath(), DefaultScope.NONE);
+
+        var query = "MATCH (n:Antlr:ScannedFile) RETURN n";
+        var result = query(query);
+        var nodes = result.getColumn("n");
+        assertThat(nodes).hasSize(1);
+    }
+
+
+    @Test
+    void testIncorrectConfiguration(){
+        var file = new File("src/test/resources/dot/DOT.g4");
+        var fileDescriptor = store.create(FileDescriptor.class);
+        Map<String, Object> properties = Map.of(
+                "jqassistant.plugin.antlr.readOnlyConfiguredGrammars", "true",
+                "\"jqassistant.plugin.antlr.grammars\"[0].grammar", "DOT.g4",
+                "\"jqassistant.plugin.antlr.grammars\"[0].grammarRoot", "dot"
+        );
+
+        getScanner(properties).scan(file, fileDescriptor, file.getAbsolutePath(), DefaultScope.NONE);
+
+        var query = "MATCH (n:Antlr:ScannedFile) RETURN n";
+        var result = query(query);
+        //Assert that scan has successfully completed but no file was scanned --> log message must have been printed
+        assertThrows(IllegalArgumentException.class, () -> result.getColumn("n"));
+    }
 
 }
