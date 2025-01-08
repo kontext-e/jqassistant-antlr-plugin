@@ -41,7 +41,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
 
     @Override
     protected void configure() {
-        createEmptyNodes = getBooleanProperty(CREATE_NODES_CONTAINING_EMPTY_TEXT, true);
+        createEmptyNodes = getBooleanProperty(CREATE_NODES_CONTAINING_EMPTY_TEXT, false);
         deleteParserAndLexerAfterScan = getBooleanProperty(DELETE_PARSER_AND_LEXER_AFTER_SCAN, false);
         readOnlyConfiguredGrammars = getBooleanProperty(READ_ONLY_CONFIGURED_GRAMMARS, false);
         grammarConfigurations = getGrammarConfigurations();

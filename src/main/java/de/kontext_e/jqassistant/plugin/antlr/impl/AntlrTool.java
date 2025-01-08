@@ -57,10 +57,10 @@ public class AntlrTool {
     private static String generateParser(File grammarFile) throws IOException {
         String outputPath = grammarFile.getParentFile().getAbsolutePath() + File.separator + ".antlrPlugin";
         File outputDirectory = new File(outputPath);
-        if (outputDirectory.exists() && outputDirectory.listFiles() != null) { return outputPath; }
+        if (outputDirectory.exists() && outputDirectory.listFiles().length > 0) { return outputPath; }
 
         boolean createdOutputDirectory = outputDirectory.mkdirs();
-        if (!createdOutputDirectory) { throw new IOException("Error creating output directory: " + outputDirectory); }
+        if (!createdOutputDirectory && !outputDirectory.exists()) { throw new IOException("Error creating output directory: " + outputDirectory); }
 
         List<String> arguments = new ArrayList<>();
         arguments.add(grammarFile.getAbsolutePath());

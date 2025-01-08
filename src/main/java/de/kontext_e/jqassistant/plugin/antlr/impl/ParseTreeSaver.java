@@ -30,7 +30,7 @@ public class ParseTreeSaver {
     }
 
     private void saveParseTreeToNeo4J(AntlrDescriptor parent, ParseTree parseTree) {
-        if (parseTree.getText().isBlank() && createEmptyNodes) return;
+        if (parseTree.getText().isBlank() && !createEmptyNodes) return;
 
         NodeDescriptor node = createDescriptor(parseTree);
         parent.getChildren().add(node);
