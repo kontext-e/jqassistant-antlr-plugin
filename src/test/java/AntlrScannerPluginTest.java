@@ -4,6 +4,7 @@ import com.buschmais.jqassistant.plugin.common.api.model.FileDescriptor;
 import de.kontext_e.jqassistant.plugin.antlr.api.model.AntlrDescriptor;
 import de.kontext_e.jqassistant.plugin.antlr.api.model.GrammarFileDescriptor;
 import de.kontext_e.jqassistant.plugin.antlr.api.model.NodeDescriptor;
+import de.kontext_e.jqassistant.plugin.antlr.api.model.ScannedFileDescriptor;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -18,6 +19,7 @@ class AntlrScannerPluginTest extends AbstractPluginIT {
 
     File file = new File("src/test/resources/logging/Logging.g4");
     Map<String, Object> properties = Map.of(
+            "jqassistant.plugin.antlr.readOnlyConfiguredGrammars", "true",
             "\"jqassistant.plugin.antlr.grammars\"[0].grammar", "Logging.g4",
             "\"jqassistant.plugin.antlr.grammars\"[0].grammarRoot", "log",
             "\"jqassistant.plugin.antlr.grammars\"[0].fileExtension", ".logging"
@@ -54,11 +56,19 @@ class AntlrScannerPluginTest extends AbstractPluginIT {
     }
 
     @Test
-    void testCustomLabels(){
+    void testCustomNodeLabels(){
         String query = "MATCH (n:Entry:Antlr) RETURN n";
         TestResult result = query(query);
         List<AntlrDescriptor> logEntries = result.getColumn("n");
         assertThat(logEntries).hasSize(6);
+    }
+
+    @Test
+    void testCustomFileLabel(){
+        String query = "MATCH (n:Log:Antlr) RETURN n";
+        TestResult result = query(query);
+        List<ScannedFileDescriptor> logEntries = result.getColumn("n");
+        assertThat(logEntries).hasSize(1);
     }
 
     @Test
