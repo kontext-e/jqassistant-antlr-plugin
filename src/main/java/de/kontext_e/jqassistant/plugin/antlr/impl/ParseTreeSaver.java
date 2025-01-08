@@ -8,12 +8,6 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Comparator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -63,15 +57,5 @@ public class ParseTreeSaver {
         //Cypher does not allow for parameterization of labels, which is why string formatting is used
         String query = String.format("MATCH (n) WHERE id(n) = %s SET n:%s", descriptor.getId(), nodeLabel);
         store.executeQuery(query).close();
-    }
-
-    void deleteGeneratedFiles(String lexerAndParserLocation) {
-        try (var dirStream = Files.walk(Paths.get(lexerAndParserLocation))) {
-            dirStream.map(Path::toFile)
-                    .sorted(Comparator.reverseOrder())
-                    .forEach(File::delete);
-        } catch (IOException e) {
-            LOGGER.warn("Could not delete generated files in: {}", lexerAndParserLocation);
-        }
     }
 }

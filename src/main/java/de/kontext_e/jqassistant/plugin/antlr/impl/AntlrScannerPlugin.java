@@ -16,10 +16,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, GrammarFileDescriptor> {
@@ -111,7 +109,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
         addGrammarRootNameToScannedFiles(scannedFiles, grammarConfiguration.get("grammarRoot"));
 
         if (deleteParserAndLexerAfterScan) {
-            parseTreeSaver.deleteGeneratedFiles(lexerAndParserLocation);
+            deleteGeneratedFiles(lexerAndParserLocation);
         }
 
         FileDescriptor fileDescriptor = scanner.getContext().getCurrentDescriptor();
@@ -182,5 +180,15 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
             LOGGER.error("There has been an error while loading and executing the parser and lexer: {}", e.getMessage());
         }
         return new ArrayList<>();
+    }
+
+    void deleteGeneratedFiles(String lexerAndParserLocation) {
+        try (var dirStream = Files.walk(Paths.get(lexerAndParserLocation))) {
+            dirStream.map(Path::toFile)
+                    .sorted(Comparator.reverseOrder())
+                    .forEach(File::delete);
+        } catch (IOException e) {
+            LOGGER.warn("Could not delete generated files in: {}", lexerAndParserLocation);
+        }
     }
 }
