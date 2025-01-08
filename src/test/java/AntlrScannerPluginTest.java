@@ -3,7 +3,7 @@ import com.buschmais.jqassistant.core.test.plugin.AbstractPluginIT;
 import com.buschmais.jqassistant.plugin.common.api.model.FileDescriptor;
 import de.kontext_e.jqassistant.plugin.antlr.api.model.AntlrDescriptor;
 import de.kontext_e.jqassistant.plugin.antlr.api.model.GrammarFileDescriptor;
-import de.kontext_e.jqassistant.plugin.antlr.api.model.ScannedFileDescriptor;
+import de.kontext_e.jqassistant.plugin.antlr.api.model.NodeDescriptor;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -46,11 +45,36 @@ class AntlrScannerPluginTest extends AbstractPluginIT {
         List<GrammarFileDescriptor> grammarFiles = result.getColumn("n");
         assertThat(grammarFiles).hasSize(1);
 
-        var grammarFileDescriptor = grammarFiles.get(0);
-        var scannedFiles = grammarFileDescriptor.getScannedFiles();
+        var grammarFile = grammarFiles.get(0);
+        var scannedFiles = grammarFile.getScannedFiles();
         assertThat(scannedFiles).hasSize(1);
 
         var scannedFileDescriptor = scannedFiles.get(0);
         assertThat(scannedFileDescriptor.getChildren().size()).isGreaterThan(0);
+    }
+
+    @Test
+    void testCustomLabels(){
+        String query = "MATCH (n:Entry:Antlr) RETURN n";
+        TestResult result = query(query);
+        List<AntlrDescriptor> logEntries = result.getColumn("n");
+        assertThat(logEntries).hasSize(6);
+    }
+
+    @Test
+    void testLogEntryContent(){
+        String query = "MATCH (n:Entry:Antlr) WHERE n.text CONTAINS '2018-May-05 14:20:18 INFO some error occurred' RETURN n";
+        TestResult result = query(query);
+        List<NodeDescriptor> logEntries = result.getColumn("n");
+        assertThat(logEntries).hasSize(1);
+
+        var logEntry = logEntries.get(0);
+        var children = logEntry.getChildren();
+        assertThat(children.size()).isEqualTo(3);
+        assertThat(children.stream().map(NodeDescriptor::getText)).contains(
+                "2018-May-05 14:20:18",
+                "INFO",
+                "some error occurred"
+        );
     }
 }
