@@ -11,6 +11,6 @@ import java.util.List;
 public interface AntlrDescriptor extends Descriptor {
 
     @Relation("HAS_CHILD")
-    List<AntlrDescriptor> getChildren();
-    void setChildren(List<AntlrDescriptor> children);
+    List<NodeDescriptor> getChildren();
+    void setChildren(List<NodeDescriptor> children);
 }
