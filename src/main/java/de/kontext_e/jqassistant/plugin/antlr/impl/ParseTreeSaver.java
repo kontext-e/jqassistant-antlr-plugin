@@ -5,8 +5,6 @@ import de.kontext_e.jqassistant.plugin.antlr.api.model.AntlrDescriptor;
 import de.kontext_e.jqassistant.plugin.antlr.api.model.NodeDescriptor;
 import de.kontext_e.jqassistant.plugin.antlr.api.model.ScannedFileDescriptor;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.regex.Matcher;
@@ -16,7 +14,6 @@ public class ParseTreeSaver {
 
     private final Store store;
     private final boolean createEmptyNodes;
-    private static final Logger LOGGER = LoggerFactory.getLogger(ParseTreeSaver.class);
 
     public ParseTreeSaver(Store store, boolean createEmptyNodes) {
         this.store = store;

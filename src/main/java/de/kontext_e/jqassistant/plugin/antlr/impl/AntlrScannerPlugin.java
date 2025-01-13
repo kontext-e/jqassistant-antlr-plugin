@@ -105,7 +105,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
 
         String lexerAndParserLocation = antlrTool.generateLexerAndParser();
         List<File> filesToBeParsed = getFilesToBeParsed(grammarFile);
-        List<ScannedFileDescriptor> scannedFiles = parseFilesAndSaveTrees(filesToBeParsed, lexerAndParserLocation);
+        List<ScannedFileDescriptor> scannedFiles = parseFilesAndStoreTrees(filesToBeParsed, lexerAndParserLocation);
         addGrammarRootNameToScannedFiles(scannedFiles, grammarConfiguration.get("grammarRoot"));
 
         if (deleteParserAndLexerAfterScan) {
@@ -158,7 +158,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
         return files;
     }
 
-    private List<ScannedFileDescriptor> parseFilesAndSaveTrees(List<File> filesToBeParsed, String lexerAndParserLocation) {
+    private List<ScannedFileDescriptor> parseFilesAndStoreTrees(List<File> filesToBeParsed, String lexerAndParserLocation) {
         List<ScannedFileDescriptor> scannedFiles = new ArrayList<>();
         for (File fileToBeParsed : filesToBeParsed) {
             List<ParseTree> parseTrees = loadParserAndParseFile(lexerAndParserLocation, fileToBeParsed);
@@ -184,6 +184,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
         return new ArrayList<>();
     }
 
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     void deleteGeneratedFiles(String lexerAndParserLocation) {
         try (var dirStream = Files.walk(Paths.get(lexerAndParserLocation))) {
             dirStream.map(Path::toFile)
