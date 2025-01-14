@@ -52,7 +52,7 @@ public class ConfigurationIT extends AbstractPluginIT {
         var fileDescriptor = store.create(FileDescriptor.class);
         Map<String, Object> properties = Map.of(
                 "jqassistant.plugin.antlr.createNodesContainingEmptyText", "true",
-                "\"jqassistant.plugin.antlr.grammars\"[0].grammar", "src/test/resources/logging/Logging.g4",
+                "\"jqassistant.plugin.antlr.grammars\"[0].grammarFile", "src/test/resources/logging/Logging.g4",
                 "\"jqassistant.plugin.antlr.grammars\"[0].grammarRoot", "log",
                 "\"jqassistant.plugin.antlr.grammars\"[0].fileExtension", ".logging"
         );
@@ -70,7 +70,7 @@ public class ConfigurationIT extends AbstractPluginIT {
         var file = new File("src/test/resources/logging/output.logging");
         var fileDescriptor = store.create(FileDescriptor.class);
         Map<String, Object> properties = Map.of(
-                "\"jqassistant.plugin.antlr.grammars\"[0].grammar", "src/test/resources/logging/Logging.g4",
+                "\"jqassistant.plugin.antlr.grammars\"[0].grammarFile", "src/test/resources/logging/Logging.g4",
                 "\"jqassistant.plugin.antlr.grammars\"[0].grammarRoot", "log",
                 "\"jqassistant.plugin.antlr.grammars\"[0].fileExtension", ".logging"
         );
@@ -88,7 +88,7 @@ public class ConfigurationIT extends AbstractPluginIT {
         var fileDescriptor = store.create(FileDescriptor.class);
         Map<String, Object> properties = Map.of(
                 "jqassistant.plugin.antlr.deleteParserAndLexerAfterScan", "true",
-                "\"jqassistant.plugin.antlr.grammars\"[0].grammar", tempDir.resolve("DOT.g4"),
+                "\"jqassistant.plugin.antlr.grammars\"[0].grammarFile", tempDir.resolve("DOT.g4"),
                 "\"jqassistant.plugin.antlr.grammars\"[0].grammarRoot", "graph",
                 "\"jqassistant.plugin.antlr.grammars\"[0].fileExtension", ".dot"
         );
@@ -122,12 +122,12 @@ public class ConfigurationIT extends AbstractPluginIT {
 
     @Test
     void testPartialConfiguration(){
-        var file = new File("src/test/resources/dot/cluster.dot");
+        var file = new File("src/test/resources/equation/wierd.equation");
         var fileDescriptor = store.create(FileDescriptor.class);
         Map<String, Object> properties = Map.of(
                 "jqassistant.plugin.antlr.readOnlyConfiguredGrammars", "true",
-                "\"jqassistant.plugin.antlr.grammars\"[0].grammar", "src/test/resources/dot/DOT.g4",
-                "\"jqassistant.plugin.antlr.grammars\"[0].grammarRoot", "graph"
+                "\"jqassistant.plugin.antlr.grammars\"[0].grammarFile", "src/test/resources/equation/equation.g4",
+                "\"jqassistant.plugin.antlr.grammars\"[0].fileExtension", ".equation"
         );
 
         getScanner(properties).scan(file, fileDescriptor, file.getAbsolutePath(), DefaultScope.NONE);

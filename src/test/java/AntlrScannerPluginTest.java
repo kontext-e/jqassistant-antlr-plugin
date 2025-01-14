@@ -20,7 +20,7 @@ class AntlrScannerPluginTest extends AbstractPluginIT {
     File file = new File("src/test/resources/logging/output.logging");
     Map<String, Object> properties = Map.of(
             "jqassistant.plugin.antlr.readOnlyConfiguredGrammars", "true",
-            "\"jqassistant.plugin.antlr.grammars\"[0].grammar", "src/test/resources/logging/Logging.g4",
+            "\"jqassistant.plugin.antlr.grammars\"[0].grammarFile", "src/test/resources/logging/Logging.g4",
             "\"jqassistant.plugin.antlr.grammars\"[0].grammarRoot", "log",
             "\"jqassistant.plugin.antlr.grammars\"[0].fileExtension", ".logging"
     );
