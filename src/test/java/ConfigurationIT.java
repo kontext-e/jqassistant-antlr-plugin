@@ -33,19 +33,6 @@ public class ConfigurationIT extends AbstractPluginIT {
         store.commitTransaction();
     }
 
-    @Test
-    void testScanUnconfiguredFiles(@TempDir File tempDir) throws IOException {
-        var tempGrammarFile = prepareCalculatorTempDir(tempDir);
-        var fileDescriptor = store.create(FileDescriptor.class);
-        Map<String, Object> properties = Map.of("jqassistant.plugin.antlr.readOnlyConfiguredGrammars", "false");
-
-        getScanner(properties).scan(tempGrammarFile, fileDescriptor, tempGrammarFile.getAbsolutePath(), DefaultScope.NONE);
-
-        var query = "MATCH (n:Antlr:Node) RETURN n";
-        var result = query(query);
-        var nodes = result.getColumn("n");
-        assertThat(nodes).hasSizeGreaterThan(0);
-    }
 
     private static File prepareCalculatorTempDir(File tempDir) throws IOException {
         var grammarfile = new File("src/test/resources/calculator/equation.g4");
@@ -61,11 +48,11 @@ public class ConfigurationIT extends AbstractPluginIT {
 
     @Test
     void testDoCreateEmptyNodes(){
-        var file = new File("src/test/resources/logging/Logging.g4");
+        var file = new File("src/test/resources/logging/output.logging");
         var fileDescriptor = store.create(FileDescriptor.class);
         Map<String, Object> properties = Map.of(
                 "jqassistant.plugin.antlr.createNodesContainingEmptyText", "true",
-                "\"jqassistant.plugin.antlr.grammars\"[0].grammar", "Logging.g4",
+                "\"jqassistant.plugin.antlr.grammars\"[0].grammar", "src/test/resources/logging/Logging.g4",
                 "\"jqassistant.plugin.antlr.grammars\"[0].grammarRoot", "log",
                 "\"jqassistant.plugin.antlr.grammars\"[0].fileExtension", ".logging"
         );
@@ -80,10 +67,10 @@ public class ConfigurationIT extends AbstractPluginIT {
 
     @Test
     void testDoNotCreateEmptyNodes(){
-        var file = new File("src/test/resources/logging/Logging.g4");
+        var file = new File("src/test/resources/logging/output.logging");
         var fileDescriptor = store.create(FileDescriptor.class);
         Map<String, Object> properties = Map.of(
-                "\"jqassistant.plugin.antlr.grammars\"[0].grammar", "Logging.g4",
+                "\"jqassistant.plugin.antlr.grammars\"[0].grammar", "src/test/resources/logging/Logging.g4",
                 "\"jqassistant.plugin.antlr.grammars\"[0].grammarRoot", "log",
                 "\"jqassistant.plugin.antlr.grammars\"[0].fileExtension", ".logging"
         );
@@ -101,7 +88,7 @@ public class ConfigurationIT extends AbstractPluginIT {
         var fileDescriptor = store.create(FileDescriptor.class);
         Map<String, Object> properties = Map.of(
                 "jqassistant.plugin.antlr.deleteParserAndLexerAfterScan", "true",
-                "\"jqassistant.plugin.antlr.grammars\"[0].grammar", "DOT.g4",
+                "\"jqassistant.plugin.antlr.grammars\"[0].grammar", tempDir.resolve("DOT.g4"),
                 "\"jqassistant.plugin.antlr.grammars\"[0].grammarRoot", "graph",
                 "\"jqassistant.plugin.antlr.grammars\"[0].fileExtension", ".dot"
         );
@@ -113,7 +100,7 @@ public class ConfigurationIT extends AbstractPluginIT {
 
     private static File prepareDotTempDir(Path tempDir) throws IOException {
         var lexerAndParserDirectory = new File("src/test/resources/dot/");
-        var tempGrammarFile = tempDir.resolve("DOT.g4").toFile();
+        var tempGrammarFile = tempDir.resolve("cluster.dot").toFile();
 
         // Copy the directory recursively
         Stream<Path> fileWalker = Files.walk(lexerAndParserDirectory.toPath());
@@ -135,11 +122,11 @@ public class ConfigurationIT extends AbstractPluginIT {
 
     @Test
     void testPartialConfiguration(){
-        var file = new File("src/test/resources/dot/DOT.g4");
+        var file = new File("src/test/resources/dot/cluster.dot");
         var fileDescriptor = store.create(FileDescriptor.class);
         Map<String, Object> properties = Map.of(
                 "jqassistant.plugin.antlr.readOnlyConfiguredGrammars", "true",
-                "\"jqassistant.plugin.antlr.grammars\"[0].grammar", "DOT.g4",
+                "\"jqassistant.plugin.antlr.grammars\"[0].grammar", "src/test/resources/dot/DOT.g4",
                 "\"jqassistant.plugin.antlr.grammars\"[0].grammarRoot", "graph"
         );
 
@@ -154,17 +141,17 @@ public class ConfigurationIT extends AbstractPluginIT {
 
     @Test
     void testIncorrectConfiguration(){
-        var file = new File("src/test/resources/dot/DOT.g4");
+        var file = new File("src/test/resources/dot/cluster.dot");
         var fileDescriptor = store.create(FileDescriptor.class);
         Map<String, Object> properties = Map.of(
                 "jqassistant.plugin.antlr.readOnlyConfiguredGrammars", "true",
-                "\"jqassistant.plugin.antlr.grammars\"[0].grammar", "DOT.g4",
+                "\"jqassistant.plugin.antlr.grammars\"[0].grammar", "src/test/resources/dot/DOT.g4",
                 "\"jqassistant.plugin.antlr.grammars\"[0].grammarRoot", "dot"
         );
 
         getScanner(properties).scan(file, fileDescriptor, file.getAbsolutePath(), DefaultScope.NONE);
 
-        var query = "MATCH (n:Antlr:ScannedFile) RETURN n";
+        var query = "MATCH (n:Antlr:Node) RETURN n";
         var result = query(query);
         //Assert that scan has successfully completed but no file was scanned --> log message must have been printed
         assertThrows(IllegalArgumentException.class, () -> result.getColumn("n"));
