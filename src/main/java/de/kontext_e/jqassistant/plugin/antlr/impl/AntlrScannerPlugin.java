@@ -27,12 +27,10 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
     private static final String PLUGIN_PROPERTY_PREFIX = "jqassistant.plugin.antlr.";
     private static final String CREATE_NODES_CONTAINING_EMPTY_TEXT = PLUGIN_PROPERTY_PREFIX + "createNodesContainingEmptyText";
     private static final String DELETE_PARSER_AND_LEXER_AFTER_SCAN = PLUGIN_PROPERTY_PREFIX + "deleteParserAndLexerAfterScan";
-    private static final String READ_ONLY_CONFIGURED_GRAMMARS = PLUGIN_PROPERTY_PREFIX + "readOnlyConfiguredGrammars";
     private static final String GRAMMAR_PROPERTY = "\"" + PLUGIN_PROPERTY_PREFIX + "grammars\"";
 
     private boolean createEmptyNodes;
     private boolean deleteParserAndLexerAfterScan;
-    private boolean readOnlyConfiguredGrammars;
     private Map<String, Map<String, String>> grammarConfigurations = new HashMap<>();
 
     private AntlrTool antlrTool;
@@ -43,7 +41,6 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
     protected void configure() {
         createEmptyNodes = getBooleanProperty(CREATE_NODES_CONTAINING_EMPTY_TEXT, false);
         deleteParserAndLexerAfterScan = getBooleanProperty(DELETE_PARSER_AND_LEXER_AFTER_SCAN, false);
-        readOnlyConfiguredGrammars = getBooleanProperty(READ_ONLY_CONFIGURED_GRAMMARS, false);
         grammarConfigurations = getGrammarConfigurations();
         super.configure();
     }
@@ -55,22 +52,24 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
 
         int i = 0;
         while (true){
-            String grammarFile = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].grammar");
+            String grammarFileName = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].grammar");
             String grammarRoot = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].grammarRoot");
             String fileExtension = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].fileExtension");
 
             if (grammarFile == null) break;
+            if (grammarFileName == null) break;
+            File grammarFile = new File(grammarFileName);
 
-            String grammarName = getGrammarName(grammarFile);
+            String grammarName = getGrammarName(grammarFileName);
             if (grammarRoot == null) grammarRoot = grammarName.toLowerCase();
             if (fileExtension == null) fileExtension = '.' + grammarName.toLowerCase();
 
             Map<String, String> grammarConfiguration = Map.of(
                     "grammarName", grammarName,
                     "grammarRoot", grammarRoot,
-                    "fileExtension", fileExtension
+                    "grammarFile", grammarFile.getAbsolutePath()
             );
-            grammarConfigurations.put(grammarFile, grammarConfiguration);
+            grammarConfigurations.put(fileExtension, grammarConfiguration);
 
             i++;
         }
@@ -83,30 +82,27 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
 
     @Override
     public boolean accepts(FileResource fileResource, String s, Scope scope) throws IOException {
-        if (readOnlyConfiguredGrammars){
-            return grammarConfigurations.containsKey(fileResource.getFile().getName());
-        } else {
-            return s.endsWith(".g4");
-        }
+        String fileExtension = getFileExtension(fileResource.getFile());
+        return grammarConfigurations.containsKey(fileExtension);
+    }
+
+    private static String getFileExtension(File file) throws IOException {
+        return file.getName().substring(file.getName().lastIndexOf('.'));
     }
 
     @Override
     public GrammarFileDescriptor scan(FileResource fileResource, String path, Scope scope, Scanner scanner) throws IOException {
-        File grammarFile = fileResource.getFile();
+        File file = fileResource.getFile();
 
-        Map<String, String> grammarConfiguration = grammarConfigurations.get(grammarFile.getName());
-        if (grammarConfiguration == null) {
-            grammarConfiguration = createNewGrammarConfiguration(grammarFile);
-        }
+        Map<String, String> grammarConfiguration = grammarConfigurations.get(getFileExtension(file));
 
         store = scanner.getContext().getStore();
         parseTreeSaver = new ParseTreeSaver(store, createEmptyNodes);
-        antlrTool = new AntlrTool(grammarFile, grammarConfiguration);
+        antlrTool = new AntlrTool(grammarConfiguration);
 
         String lexerAndParserLocation = antlrTool.generateLexerAndParser();
-        List<File> filesToBeParsed = getFilesToBeParsed(grammarFile);
-        List<ScannedFileDescriptor> scannedFiles = parseFilesAndStoreTrees(filesToBeParsed, lexerAndParserLocation);
-        addGrammarRootNameToScannedFiles(scannedFiles, grammarConfiguration.get("grammarRoot"));
+        ScannedFileDescriptor scannedFile = parseFilesAndStoreTrees(file, lexerAndParserLocation);
+        addGrammarRootNameToScannedFiles(scannedFile, grammarConfiguration.get("grammarRoot"));
 
         if (deleteParserAndLexerAfterScan) {
             deleteGeneratedFiles(lexerAndParserLocation);
@@ -114,61 +110,25 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
 
         FileDescriptor fileDescriptor = scanner.getContext().getCurrentDescriptor();
         GrammarFileDescriptor antlrGrammarDescriptor = store.addDescriptorType(fileDescriptor, GrammarFileDescriptor.class);
-        antlrGrammarDescriptor.setScannedFiles(scannedFiles);
+        antlrGrammarDescriptor.getScannedFiles().add(scannedFile);
         return antlrGrammarDescriptor;
     }
 
-    private void addGrammarRootNameToScannedFiles(List<ScannedFileDescriptor> scannedFiles, String grammarRoot) {
-        for (ScannedFileDescriptor scannedFile : scannedFiles) {
-            String queryTemplate = "MATCH (n) WHERE id(n) = %s SET n:%s";
-            String query = String.format(queryTemplate, scannedFile.getId(), capitalizeFirstLetter(grammarRoot));
-            store.executeQuery(query).close();
-        }
+    private void addGrammarRootNameToScannedFiles(ScannedFileDescriptor scannedFile, String grammarRoot) {
+        String queryTemplate = "MATCH (n) WHERE id(n) = %s SET n:%s";
+        String query = String.format(queryTemplate, scannedFile.getId(), capitalizeFirstLetter(grammarRoot));
+        store.executeQuery(query).close();
     }
 
     private String capitalizeFirstLetter(String string) {
         return string.substring(0, 1).toUpperCase() + string.substring(1);
     }
 
-    private Map<String, String> createNewGrammarConfiguration(File grammarFile) {
-        Map<String, String> grammarConfiguration = new HashMap<>();
-        String grammarName = getGrammarName(grammarFile.getName());
-        grammarConfiguration.put("grammarName", grammarName);
-        grammarConfiguration.put("grammarRoot", grammarName.toLowerCase());
-        grammarConfiguration.put("fileExtension", "." + grammarName.toLowerCase());
-        grammarConfigurations.put(grammarFile.getName(), grammarConfiguration);
-        return grammarConfiguration;
-    }
-
-    private List<File> getFilesToBeParsed(File grammarFile) {
-        ArrayList<File> files = new ArrayList<>();
-
-        String grammarFileAbsolutePath = grammarFile.getAbsolutePath();
-        String grammarName = grammarFileAbsolutePath.substring(grammarFileAbsolutePath.lastIndexOf(File.separator) + 1);
-        String fileExtension = grammarConfigurations.get(grammarName).get("fileExtension");
-
-        File parent = grammarFile.getParentFile();
-        try (Stream<Path> stream = Files.walk(parent.toPath())){
-            stream.filter(path -> path.toString().endsWith(fileExtension))
-                  .forEach(path -> files.add(path.toFile()));
-        } catch (IOException e) {
-            LOGGER.error("An Error occurred while looking for files to be read with grammar: {}, {}", grammarFile.getName(), e.getMessage());
-        }
-
-        return files;
-    }
-
-    private List<ScannedFileDescriptor> parseFilesAndStoreTrees(List<File> filesToBeParsed, String lexerAndParserLocation) {
-        List<ScannedFileDescriptor> scannedFiles = new ArrayList<>();
-        for (File fileToBeParsed : filesToBeParsed) {
-            List<ParseTree> parseTrees = loadParserAndParseFile(lexerAndParserLocation, fileToBeParsed);
-            if (!parseTrees.isEmpty()) {
-                ScannedFileDescriptor scannedFileDescriptor = store.create(ScannedFileDescriptor.class);
-                parseTreeSaver.saveParseTreesToNeo4J(parseTrees, scannedFileDescriptor);
-                scannedFiles.add(scannedFileDescriptor);
-            }
-        }
-        return scannedFiles;
+    private ScannedFileDescriptor parseFilesAndStoreTrees(File fileToBeParsed, String lexerAndParserLocation) {
+        List<ParseTree> parseTrees = loadParserAndParseFile(lexerAndParserLocation, fileToBeParsed);
+        ScannedFileDescriptor scannedFileDescriptor = store.create(ScannedFileDescriptor.class);
+        parseTreeSaver.saveParseTreesToNeo4J(parseTrees, scannedFileDescriptor);
+        return scannedFileDescriptor;
     }
 
     private List<ParseTree> loadParserAndParseFile(String lexerAndParserLocation, File parsedFile) {

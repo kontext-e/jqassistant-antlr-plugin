@@ -34,8 +34,8 @@ public class AntlrTool {
     private final String grammarRoot;
     private final File grammarFile;
 
-    public AntlrTool(File grammarFile, Map<String, String> grammarConfiguration) {
-        this.grammarFile = grammarFile;
+    public AntlrTool(Map<String, String> grammarConfiguration) {
+        this.grammarFile = new File(grammarConfiguration.get("grammarFile"));
         this.grammarName = grammarConfiguration.get("grammarName");
         this.grammarRoot = grammarConfiguration.get("grammarRoot");
     }
