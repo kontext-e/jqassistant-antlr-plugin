@@ -51,17 +51,24 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
 
         int i = 0;
         while (true){
-            String grammarFileName = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].grammar");
-            String grammarRoot = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].grammarRoot");
             String fileExtension = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].fileExtension");
+            String grammarFileName = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].grammarFile");
+            String grammarRoot = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].grammarRoot");
 
-            if (grammarFileName == null) break;
+            if (fileExtension == null && grammarFileName == null) break;
+            if (fileExtension == null || grammarFileName == null) {
+                LOGGER.error(
+                        "Incomplete configuration found at {}. Make sure to specify both the fileExtension and grammarFile!",
+                        fileExtension != null ? fileExtension : grammarFileName
+                );
+                break;
+            }
+
             File grammarFile = new File(grammarFileName);
             if (!grammarFile.isAbsolute()) grammarFile = grammarFile.getAbsoluteFile();
 
             String grammarName = getGrammarName(grammarFileName);
             if (grammarRoot == null) grammarRoot = grammarName.toLowerCase();
-            if (fileExtension == null) fileExtension = '.' + grammarName.toLowerCase();
 
             Map<String, String> grammarConfiguration = Map.of(
                     "grammarName", grammarName,
