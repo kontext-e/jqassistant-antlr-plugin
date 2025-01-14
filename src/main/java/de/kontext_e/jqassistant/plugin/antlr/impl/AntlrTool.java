@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static de.kontext_e.jqassistant.plugin.antlr.impl.Utils.capitalizeFirstLetter;
+
 public class AntlrTool {
 
     private final String grammarName;
@@ -114,8 +116,7 @@ public class AntlrTool {
         Method method = parserClass.getMethod(grammarRoot);
         Object returnValue = method.invoke(parserInstance);
 
-        //TODO Verify that this works
-        String rootContextClassName = grammarRoot.substring(0, 1).toUpperCase() + grammarRoot.substring(1);
+        String rootContextClassName = capitalizeFirstLetter(grammarRoot);
         Class<?> contextClass = Class.forName(grammarName + "Parser$" + rootContextClassName + "Context", true, classLoader);
         Field children = contextClass.getSuperclass().getDeclaredField("children");
 

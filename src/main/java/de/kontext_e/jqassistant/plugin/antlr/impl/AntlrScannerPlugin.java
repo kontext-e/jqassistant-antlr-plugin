@@ -19,6 +19,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
+import static de.kontext_e.jqassistant.plugin.antlr.impl.Utils.capitalizeFirstLetter;
+
 public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, GrammarFileDescriptor> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AntlrScannerPlugin.class);
@@ -94,7 +96,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
         return grammarConfigurations.containsKey(fileExtension);
     }
 
-    private static String getFileExtension(File file) throws IOException {
+    private static String getFileExtension(File file) {
         return file.getName().substring(file.getName().lastIndexOf('.'));
     }
 
@@ -126,10 +128,6 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
         String queryTemplate = "MATCH (n) WHERE id(n) = %s SET n:%s";
         String query = String.format(queryTemplate, scannedFile.getId(), capitalizeFirstLetter(grammarRoot));
         store.executeQuery(query).close();
-    }
-
-    private String capitalizeFirstLetter(String string) {
-        return string.substring(0, 1).toUpperCase() + string.substring(1);
     }
 
     private ScannedFileDescriptor parseFilesAndStoreTrees(File fileToBeParsed, String lexerAndParserLocation) {
