@@ -54,8 +54,8 @@ public class AntlrTool {
         return Arrays.stream(files).anyMatch(file -> file.getName().endsWith(".class"));
     }
 
-    private static String generateParser(File grammarFile) throws IOException {
-        String outputPath = grammarFile.getParentFile().getAbsolutePath() + File.separator + ".antlrPlugin";
+    private String generateParser(File grammarFile) throws IOException {
+        String outputPath = grammarFile.getParentFile().getAbsolutePath() + File.separator + ".antlrPlugin" + grammarName;
         File outputDirectory = new File(outputPath);
         if (outputDirectory.exists() && outputDirectory.listFiles() != null) { return outputPath; }
 
