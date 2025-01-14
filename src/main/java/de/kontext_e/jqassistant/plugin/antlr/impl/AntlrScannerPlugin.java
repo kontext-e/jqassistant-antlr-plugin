@@ -108,7 +108,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
         parseTreeSaver = new ParseTreeSaver(store, createEmptyNodes);
         antlrTool = new AntlrTool(grammarConfiguration);
 
-        String lexerAndParserLocation = antlrTool.generateLexerAndParser();
+        String lexerAndParserLocation = antlrTool.getLexerAndParser();
         ScannedFileDescriptor scannedFile = parseFilesAndStoreTrees(file, lexerAndParserLocation);
         addGrammarRootNameToScannedFiles(scannedFile, grammarConfiguration.get("grammarRoot"));
 

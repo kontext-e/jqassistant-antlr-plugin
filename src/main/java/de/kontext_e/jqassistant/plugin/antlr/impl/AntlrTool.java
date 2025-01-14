@@ -40,8 +40,11 @@ public class AntlrTool {
         this.grammarRoot = grammarConfiguration.get("grammarRoot");
     }
 
-    public String generateLexerAndParser() throws IOException {
-        String lexerAndParserLocation = generateParser(grammarFile);
+    public String getLexerAndParser() throws IOException {
+        String lexerAndParserLocation = grammarFile.getParentFile().getAbsolutePath() + File.separator + ".antlrPlugin" + grammarName;
+        if (!javaFilesFoundInDirectory(lexerAndParserLocation)) {
+            generateLexerAndParser(grammarFile, lexerAndParserLocation);
+        }
         if (!classFilesFoundInDirectory(lexerAndParserLocation)) {
             compileJavaFiles(findJavaFilesInDirectory(lexerAndParserLocation));
         }
@@ -54,10 +57,14 @@ public class AntlrTool {
         return Arrays.stream(files).anyMatch(file -> file.getName().endsWith(".class"));
     }
 
-    private String generateParser(File grammarFile) throws IOException {
-        String outputPath = grammarFile.getParentFile().getAbsolutePath() + File.separator + ".antlrPlugin" + grammarName;
+    private static boolean javaFilesFoundInDirectory(String lexerAndParserLocation) {
+        File[] outputDirectory = new File(lexerAndParserLocation).listFiles();
+        if (outputDirectory == null) return false;
+        return Arrays.stream(outputDirectory).anyMatch(file -> file.getName().endsWith(".java"));
+    }
+
+    private void generateLexerAndParser(File grammarFile, String outputPath) throws IOException {
         File outputDirectory = new File(outputPath);
-        if (outputDirectory.exists() && outputDirectory.listFiles() != null) { return outputPath; }
 
         boolean createdOutputDirectory = outputDirectory.mkdirs();
         if (!createdOutputDirectory && !outputDirectory.exists()) { throw new IOException("Error creating output directory: " + outputDirectory); }
@@ -69,8 +76,6 @@ public class AntlrTool {
 
         Tool tool = new Tool(arguments.toArray(new String[0]));
         tool.processGrammarsOnCommandLine();
-
-        return outputPath;
     }
 
     private static List<String> findJavaFilesInDirectory(String lexerParserDirectory) throws IOException {
