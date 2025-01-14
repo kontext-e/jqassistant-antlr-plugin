@@ -18,7 +18,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
-import java.util.stream.Stream;
 
 public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, GrammarFileDescriptor> {
 
@@ -56,9 +55,9 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
             String grammarRoot = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].grammarRoot");
             String fileExtension = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].fileExtension");
 
-            if (grammarFile == null) break;
             if (grammarFileName == null) break;
             File grammarFile = new File(grammarFileName);
+            if (!grammarFile.isAbsolute()) grammarFile = grammarFile.getAbsoluteFile();
 
             String grammarName = getGrammarName(grammarFileName);
             if (grammarRoot == null) grammarRoot = grammarName.toLowerCase();
@@ -77,7 +76,9 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
     }
 
     static String getGrammarName(String grammarFile) {
-        return grammarFile.substring(grammarFile.lastIndexOf(File.separator) + 1, grammarFile.lastIndexOf('.'));
+        grammarFile = grammarFile.replace('/', File.separatorChar);
+        grammarFile = grammarFile.replace('\\', File.separatorChar);
+       return grammarFile.substring(grammarFile.lastIndexOf(File.separator) + 1, grammarFile.lastIndexOf('.'));
     }
 
     @Override
