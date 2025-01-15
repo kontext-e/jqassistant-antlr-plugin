@@ -36,7 +36,7 @@ Additionally, there are two properties to further configure the behavior of the 
 scan:
   properties:
     jqassistant.plugin.antlr.createNodesContainingEmptyText = false
-    jqassistant.plugin.antlr.deleteParserAndLexerAfterScan = false
+    jqassistant.plugin.antlr.deleteLexerAndParserAfterScan = false
 ````
 
 ### CreateNodesContainingEmptyText
@@ -54,7 +54,7 @@ These files can be found in a newly-created directory called ``.antlrPlugin`` ne
 These files are then being compiled using the Java Compiler. These, now usable files, are stored in the same directory. Next, the plugin loads the ``.class``-Files and instantiates the parser using the Java Reflection API. The grammar root is then used to find the method of the parser that returns the entire parse tree.
 Finally, the AST is stored into the internal neo4j database directly while adding the name of the parse-tree-nodes to the nodes in the database as a label. Along with this label all nodes representing the AST carry the lable ``:Node`` and all nodes created by the Antlr Plugin carry the Label ``:Antlr``
 
-As generating and compiling classes at runtime is fairly slow the plugin checks if either .java files or .class files are already present and skips the respective steps. To modify this behaviour have a look at the ```jqassistant.plugin.antlr.deleteParserAndLexerAfterScan``` configuration option.
+As generating and compiling classes at runtime is fairly slow the plugin checks if either .java files or .class files are already present and skips the respective steps. To modify this behaviour have a look at the ```jqassistant.plugin.antlr.deleteLexerAndParserAfterScan``` configuration option.
 
 ## Data structure
 

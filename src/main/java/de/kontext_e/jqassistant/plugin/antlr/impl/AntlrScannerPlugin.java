@@ -27,7 +27,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
 
     private static final String PLUGIN_PROPERTY_PREFIX = "jqassistant.plugin.antlr.";
     private static final String CREATE_NODES_CONTAINING_EMPTY_TEXT = PLUGIN_PROPERTY_PREFIX + "createNodesContainingEmptyText";
-    private static final String DELETE_PARSER_AND_LEXER_AFTER_SCAN = PLUGIN_PROPERTY_PREFIX + "deleteParserAndLexerAfterScan";
+    private static final String DELETE_LEXER_AND_PARSER_AFTER_SCAN = PLUGIN_PROPERTY_PREFIX + "deleteLexerAndParserAfterScan";
     private static final String GRAMMAR_PROPERTY = "\"" + PLUGIN_PROPERTY_PREFIX + "grammars\"";
 
     private boolean createEmptyNodes;
@@ -41,7 +41,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
     @Override
     protected void configure() {
         createEmptyNodes = getBooleanProperty(CREATE_NODES_CONTAINING_EMPTY_TEXT, false);
-        deleteParserAndLexerAfterScan = getBooleanProperty(DELETE_PARSER_AND_LEXER_AFTER_SCAN, false);
+        deleteParserAndLexerAfterScan = getBooleanProperty(DELETE_LEXER_AND_PARSER_AFTER_SCAN, false);
         grammarConfigurations = getGrammarConfigurations();
         super.configure();
     }

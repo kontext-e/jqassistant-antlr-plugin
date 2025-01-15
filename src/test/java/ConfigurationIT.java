@@ -33,19 +33,6 @@ public class ConfigurationIT extends AbstractPluginIT {
         store.commitTransaction();
     }
 
-
-    private static File prepareCalculatorTempDir(File tempDir) throws IOException {
-        var grammarfile = new File("src/test/resources/calculator/equation.g4");
-        var file = new File("src/test/resources/calculator/weird.equation");
-
-        var tempGrammarFile = tempDir.toPath().resolve("equation.g4").toFile();
-        var tempFile = tempDir.toPath().resolve("weird.equation").toFile();
-
-        Files.copy(grammarfile.toPath(), tempGrammarFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        Files.copy(file.toPath(), tempFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        return tempGrammarFile;
-    }
-
     @Test
     void testDoCreateEmptyNodes(){
         var file = new File("src/test/resources/logging/output.logging");
@@ -87,7 +74,7 @@ public class ConfigurationIT extends AbstractPluginIT {
 
         var fileDescriptor = store.create(FileDescriptor.class);
         Map<String, Object> properties = Map.of(
-                "jqassistant.plugin.antlr.deleteParserAndLexerAfterScan", "true",
+                "jqassistant.plugin.antlr.deleteLexerAndParserAfterScan", "true",
                 "\"jqassistant.plugin.antlr.grammars\"[0].grammarFile", tempDir.resolve("DOT.g4"),
                 "\"jqassistant.plugin.antlr.grammars\"[0].grammarRoot", "graph",
                 "\"jqassistant.plugin.antlr.grammars\"[0].fileExtension", ".dot"
