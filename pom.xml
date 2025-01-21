@@ -64,6 +64,11 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>com.buschmais.jqassistant</groupId>
+                <artifactId>jqassistant-maven-plugin</artifactId>
+                <version>2.5.0</version>
+            </plugin>
         </plugins>
     </build>
 
@@ -82,16 +87,19 @@
             <groupId>com.buschmais.jqassistant.core</groupId>
             <artifactId>scanner</artifactId>
             <version>2.5.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.buschmais.jqassistant.plugin</groupId>
             <artifactId>common</artifactId>
             <version>2.5.0</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.buschmais.jqassistant.core</groupId>
             <artifactId>store</artifactId>
             <version>2.5.0</version>
+            <scope>provided</scope>
         </dependency>
         <!--  General test dependencies  -->
         <dependency>
