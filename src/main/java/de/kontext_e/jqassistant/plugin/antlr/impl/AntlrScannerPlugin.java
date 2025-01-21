@@ -145,7 +145,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
         } catch (NoSuchMethodException e) {
             LOGGER.error("Method to get parse tree root not found in parser. Does the configured grammar root match the actual grammar root? {}", e.getMessage());
         } catch (Exception e) {
-            LOGGER.error("There has been an error while loading and executing the parser and lexer: {}", e.getMessage());
+            LOGGER.error("There has been an error while loading and executing the parser and lexer: {}", (Object[]) e.getStackTrace());
         }
         return new ArrayList<>();
     }
