@@ -84,11 +84,6 @@
             <version>2.5.0</version>
         </dependency>
         <dependency>
-            <groupId>com.buschmais.jqassistant.core</groupId>
-            <artifactId>report</artifactId>
-            <version>2.5.0</version>
-        </dependency>
-        <dependency>
             <groupId>com.buschmais.jqassistant.plugin</groupId>
             <artifactId>common</artifactId>
             <version>2.5.0</version>
@@ -98,6 +93,7 @@
             <artifactId>store</artifactId>
             <version>2.5.0</version>
         </dependency>
+        <!--  General test dependencies  -->
         <dependency>
             <groupId>com.buschmais.jqassistant.core</groupId>
             <artifactId>test</artifactId>
@@ -108,12 +104,6 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
             <version>5.5.2</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>1.7.13</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -128,13 +118,6 @@
             <version>1.10.1</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.7.25</version>
-            <scope>provided</scope>
-        </dependency>
-        <!--  General test dependencies  -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
