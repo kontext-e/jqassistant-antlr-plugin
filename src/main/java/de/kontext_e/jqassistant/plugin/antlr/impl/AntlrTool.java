@@ -5,6 +5,8 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.TokenSource;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
@@ -28,6 +30,8 @@ import java.util.stream.Stream;
 import static de.kontext_e.jqassistant.plugin.antlr.impl.Utils.capitalizeFirstLetter;
 
 public class AntlrTool {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AntlrTool.class);
 
     private final String grammarName;
     private final String grammarRoot;
@@ -98,7 +102,7 @@ public class AntlrTool {
         compiler.getTask(compilerOutput, fileManager, null, options, null, compilationUnits).call();
 
         if (!compilerOutput.toString().isEmpty()) {
-            throw new RuntimeException("Compilation failed: " + compilerOutput.toString());
+            LOGGER.error("Compilation failed: {}", compilerOutput);
         }
     }
 
