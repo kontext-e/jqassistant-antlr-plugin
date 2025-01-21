@@ -21,10 +21,7 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -95,16 +92,23 @@ public class AntlrTool {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
         Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromStrings(javaFiles);
+        List<String> options = Arrays.asList("-classpath", new BasicClasspathResolver().getPluginClassPath());
+        StringWriter compilerOutput = new StringWriter();
 
-        compiler.getTask(new StringWriter(), fileManager, null, null, null, compilationUnits).call();
+        compiler.getTask(compilerOutput, fileManager, null, options, null, compilationUnits).call();
+
+        if (!compilerOutput.toString().isEmpty()) {
+            throw new RuntimeException("Compilation failed: " + compilerOutput.toString());
+        }
     }
+
 
     @SuppressWarnings("unchecked")
     public List<ParseTree> loadParserAndParseFile(String lexerAndParserLocation, File file) throws ClassNotFoundException, IOException,
             InvocationTargetException, InstantiationException, IllegalAccessException, NoSuchMethodException, NoSuchFieldException {
 
         URL lexerAndParserURL = new File(lexerAndParserLocation).toURI().toURL();
-        URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{lexerAndParserURL});
+        URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{lexerAndParserURL}, getClass().getClassLoader());
 
         Class<?> parserClass = Class.forName(grammarName + "Parser", true, classLoader);
         Class<?> lexerClass = Class.forName(grammarName + "Lexer", true, classLoader);
