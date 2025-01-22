@@ -96,7 +96,10 @@ public class AntlrTool {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
         Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromStrings(javaFiles);
-        List<String> options = Arrays.asList("-classpath", new BasicClasspathResolver().getPluginClassPath());
+        String pluginClassPath = new BasicClasspathResolver().getPluginClassPath();
+        // The following line and the null is unfortunately necessary to make the tests run again, as during the tests,
+        // this class is not loaded with an url Classloader but instead with an AppClassLoader
+        List<String> options = pluginClassPath.isEmpty() ? null : Arrays.asList("-classpath", pluginClassPath);
         StringWriter compilerOutput = new StringWriter();
 
         compiler.getTask(compilerOutput, fileManager, null, options, null, compilationUnits).call();
