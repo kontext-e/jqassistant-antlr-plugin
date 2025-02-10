@@ -6,88 +6,65 @@ import com.buschmais.jqassistant.core.store.api.Store;
 import com.buschmais.jqassistant.plugin.common.api.model.FileDescriptor;
 import com.buschmais.jqassistant.plugin.common.api.scanner.AbstractScannerPlugin;
 import com.buschmais.jqassistant.plugin.common.api.scanner.filesystem.FileResource;
+import de.kontext_e.jqassistant.plugin.antlr.api.config.GrammarConfiguration;
+import de.kontext_e.jqassistant.plugin.antlr.api.config.PluginConfig;
 import de.kontext_e.jqassistant.plugin.antlr.api.model.GrammarFileDescriptor;
 import de.kontext_e.jqassistant.plugin.antlr.api.model.ScannedFileDescriptor;
+import io.smallrye.config.SmallRyeConfig;
+import io.smallrye.config.SmallRyeConfigBuilder;
+import io.smallrye.config.source.yaml.YamlConfigSource;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
-import static de.kontext_e.jqassistant.plugin.antlr.impl.Utils.capitalizeFirstLetter;
+import static de.kontext_e.jqassistant.plugin.antlr.impl.Utils.*;
 
 public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, GrammarFileDescriptor> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AntlrScannerPlugin.class);
 
-    private static final String PLUGIN_PROPERTY_PREFIX = "jqassistant.plugin.antlr.";
-    private static final String CREATE_NODES_CONTAINING_EMPTY_TEXT = PLUGIN_PROPERTY_PREFIX + "createNodesContainingEmptyText";
-    private static final String DELETE_LEXER_AND_PARSER_AFTER_SCAN = PLUGIN_PROPERTY_PREFIX + "deleteLexerAndParserAfterScan";
-    private static final String GRAMMAR_PROPERTY = "\"" + PLUGIN_PROPERTY_PREFIX + "grammars\"";
+    private static final String PLUGIN_CONFIG_PREFIX = "jqassistant.plugin.antlr.configLocation";
 
     private boolean createEmptyNodes;
     private boolean deleteParserAndLexerAfterScan;
-    private Map<String, Map<String, String>> grammarConfigurations = new HashMap<>();
+    private final Map<String, GrammarConfiguration> grammarConfigurations = new HashMap<>();
 
     private AntlrTool antlrTool;
     private Store store;
     private ParseTreeSaver parseTreeSaver;
 
     @Override
-    protected void configure() {
-        createEmptyNodes = getBooleanProperty(CREATE_NODES_CONTAINING_EMPTY_TEXT, false);
-        deleteParserAndLexerAfterScan = getBooleanProperty(DELETE_LEXER_AND_PARSER_AFTER_SCAN, false);
-        grammarConfigurations = getGrammarConfigurations();
-        super.configure();
-    }
+    protected void configure(){
+        String configLocation = getProperty(PLUGIN_CONFIG_PREFIX, String.class);
+        try {
+            URL url = Paths.get(configLocation).toUri().toURL();
+            YamlConfigSource yamlConfigSource = new YamlConfigSource(url, 300);
+            SmallRyeConfig config = new SmallRyeConfigBuilder()
+                    .withMapping(PluginConfig.class)
+                    .withSources(yamlConfigSource)
+                    .build();
 
-    private HashMap<String, Map<String, String>> getGrammarConfigurations() {
+            PluginConfig pluginConfig = config.getConfigMapping(PluginConfig.class);
+            createEmptyNodes = pluginConfig.createEmptyNodes();
+            deleteParserAndLexerAfterScan = pluginConfig.deleteLexerAndParserAfterScan();
 
-        HashMap<String, Map<String, String>> grammarConfigurations = new HashMap<>();
-        Map<String, Object> properties = getProperties();
-
-        int i = 0;
-        while (true){
-            String fileExtension = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].fileExtension");
-            String grammarFileName = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].grammarFile");
-            String grammarRoot = (String) properties.get(GRAMMAR_PROPERTY + "[" + i + "].grammarRoot");
-
-            if (fileExtension == null && grammarFileName == null) break;
-            if (fileExtension == null || grammarFileName == null) {
-                LOGGER.error(
-                        "Incomplete configuration found at {}. Make sure to specify both the fileExtension and grammarFile!",
-                        fileExtension != null ? fileExtension : grammarFileName
-                );
-                break;
+            for (GrammarConfiguration grammarConfiguration : pluginConfig.grammars()){
+                String fileExtension = grammarConfiguration.fileExtension()
+                        .orElse(getFileExtension(new File(grammarConfiguration.grammarFile())));
+                grammarConfigurations.put(fileExtension, grammarConfiguration);
             }
-
-            File grammarFile = new File(grammarFileName);
-            if (!grammarFile.isAbsolute()) grammarFile = grammarFile.getAbsoluteFile();
-
-            String grammarName = getGrammarName(grammarFileName);
-            if (grammarRoot == null) grammarRoot = grammarName.toLowerCase();
-
-            Map<String, String> grammarConfiguration = Map.of(
-                    "grammarName", grammarName,
-                    "grammarRoot", grammarRoot,
-                    "grammarFile", grammarFile.getAbsolutePath()
-            );
-            grammarConfigurations.put(fileExtension, grammarConfiguration);
-
-            i++;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        return grammarConfigurations;
-    }
-
-    static String getGrammarName(String grammarFile) {
-        grammarFile = grammarFile.replace('/', File.separatorChar);
-        grammarFile = grammarFile.replace('\\', File.separatorChar);
-       return grammarFile.substring(grammarFile.lastIndexOf(File.separator) + 1, grammarFile.lastIndexOf('.'));
+        super.configure();
     }
 
     @Override
@@ -96,15 +73,11 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
         return grammarConfigurations.containsKey(fileExtension);
     }
 
-    private static String getFileExtension(File file) {
-        return file.getName().substring(file.getName().lastIndexOf('.'));
-    }
-
     @Override
     public GrammarFileDescriptor scan(FileResource fileResource, String path, Scope scope, Scanner scanner) throws IOException {
         File file = fileResource.getFile();
 
-        Map<String, String> grammarConfiguration = grammarConfigurations.get(getFileExtension(file));
+        GrammarConfiguration grammarConfiguration = grammarConfigurations.get(getFileExtension(file));
 
         store = scanner.getContext().getStore();
         parseTreeSaver = new ParseTreeSaver(store, createEmptyNodes);
@@ -112,7 +85,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
 
         String lexerAndParserLocation = antlrTool.getLexerAndParser();
         ScannedFileDescriptor scannedFile = parseFilesAndStoreTrees(file, lexerAndParserLocation);
-        addGrammarRootNameToScannedFiles(scannedFile, grammarConfiguration.get("grammarRoot"));
+        addGrammarRootNameToScannedFiles(scannedFile, grammarConfiguration.grammarRoot().orElse(getGrammarRoot(grammarConfiguration.grammarFile())));
 
         if (deleteParserAndLexerAfterScan) {
             deleteGeneratedFiles(lexerAndParserLocation);

@@ -1,5 +1,6 @@
 package de.kontext_e.jqassistant.plugin.antlr.impl;
 
+import de.kontext_e.jqassistant.plugin.antlr.api.config.GrammarConfiguration;
 import org.antlr.v4.Tool;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -23,11 +24,14 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static de.kontext_e.jqassistant.plugin.antlr.impl.Utils.capitalizeFirstLetter;
+import static de.kontext_e.jqassistant.plugin.antlr.impl.Utils.getGrammarName;
 
 public class AntlrTool {
 
@@ -37,10 +41,10 @@ public class AntlrTool {
     private final String grammarRoot;
     private final File grammarFile;
 
-    public AntlrTool(Map<String, String> grammarConfiguration) {
-        this.grammarFile = new File(grammarConfiguration.get("grammarFile"));
-        this.grammarName = grammarConfiguration.get("grammarName");
-        this.grammarRoot = grammarConfiguration.get("grammarRoot");
+    public AntlrTool(GrammarConfiguration grammarConfiguration) {
+        this.grammarFile = new File(grammarConfiguration.grammarFile());
+        this.grammarName = grammarConfiguration.grammarName().orElse(getGrammarName(grammarConfiguration.grammarFile()));
+        this.grammarRoot = grammarConfiguration.grammarRoot().orElse(grammarName.toLowerCase());
     }
 
     public String getLexerAndParser() throws IOException {
