@@ -13,8 +13,6 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
-import static de.kontext_e.jqassistant.plugin.antlr.impl.Utils.getFileExtension;
-
 public class ConfigurationProvider {
 
     private boolean deleteParserAndLexerAfterScan;
@@ -34,7 +32,6 @@ public class ConfigurationProvider {
             String fileExtension = grammarConfiguration.getFileExtension();
             grammarConfigurations.put(fileExtension, grammarConfiguration);
         }
-
     }
 
     private static SmallRyeConfig loadYamlFile(File configFile) throws IOException {

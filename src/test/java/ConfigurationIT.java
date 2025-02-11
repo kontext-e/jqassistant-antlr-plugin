@@ -84,19 +84,7 @@ public class ConfigurationIT extends AbstractPluginIT {
     private static File prepareDotTempDir(Path tempDir) throws IOException {
         var lexerAndParserDirectory = new File("src/test/resources/dot/");
         var tempFileToBeScanned = tempDir.resolve("cluster.dot").toFile();
-        var tempGrammarFile = tempDir.resolve("Dot.g4");
-        var configFile = tempDir.resolve("deleteLexerAndParser.yaml").toFile();
-        var configFileContent =
-                "jqassistant:\n" +
-                "  plugin:\n" +
-                "    antlr:\n" +
-                "      deleteLexerAndParserAfterScan: \"true\"\n" +
-                "      grammars:\n" +
-                "        - grammarFile: "+ tempGrammarFile +"\n" +
-                "          grammarName: \"DOT\"\n" +
-                "          grammarRoot: \"graph\"\n" +
-                "          fileExtension: \".dot\"";
-        Files.write(configFile.toPath(), configFileContent.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
+        createConfigFile(tempDir);
         // Copy the directory recursively
         Stream<Path> fileWalker = Files.walk(lexerAndParserDirectory.toPath());
         fileWalker.forEach(sourcePath -> {
@@ -113,6 +101,22 @@ public class ConfigurationIT extends AbstractPluginIT {
         });
         fileWalker.close();
         return tempFileToBeScanned;
+    }
+
+    private static void createConfigFile(Path tempDir) throws IOException {
+        var tempGrammarFile = tempDir.resolve("Dot.g4");
+        var configFile = tempDir.resolve("deleteLexerAndParser.yaml").toFile();
+        var configFileContent =
+                "jqassistant:\n" +
+                "  plugin:\n" +
+                "    antlr:\n" +
+                "      deleteLexerAndParserAfterScan: \"true\"\n" +
+                "      grammars:\n" +
+                "        - grammarFile: "+ tempGrammarFile +"\n" +
+                "          grammarName: \"DOT\"\n" +
+                "          grammarRoot: \"graph\"\n" +
+                "          fileExtension: \".dot\"";
+        Files.write(configFile.toPath(), configFileContent.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
     }
 
     @Test
