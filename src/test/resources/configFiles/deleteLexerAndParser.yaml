@@ -1,0 +1,8 @@
+jqassistant:
+  plugin:
+    antlr:
+      deleteLexerAndParserAfterScan: true
+      grammars:
+        - grammarFile: src/test/resources/dot/DOT.g4
+          grammarRoot: "graph"
+          fileExtension: ".dot"

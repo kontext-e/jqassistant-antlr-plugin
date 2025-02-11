@@ -1,0 +1,7 @@
+jqassistant:
+  plugin:
+    antlr:
+      grammars:
+        - grammarFile: src/test/resources/dot/DOT.g4
+          grammarRoot: "dot"
+          fileExtension: ".dot"

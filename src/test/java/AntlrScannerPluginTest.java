@@ -18,12 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class AntlrScannerPluginTest extends AbstractPluginIT {
 
     File file = new File("src/test/resources/logging/output.logging");
-    Map<String, Object> properties = Map.of(
-            "jqassistant.plugin.antlr.readOnlyConfiguredGrammars", "true",
-            "\"jqassistant.plugin.antlr.grammars\"[0].grammarFile", "src/test/resources/logging/Logging.g4",
-            "\"jqassistant.plugin.antlr.grammars\"[0].grammarRoot", "log",
-            "\"jqassistant.plugin.antlr.grammars\"[0].fileExtension", ".logging"
-    );
+    Map<String, Object> properties = Map.of("jqassistant.plugin.antlr.configLocation", "src/test/resources/configFiles/config.yaml");
 
     @BeforeEach
     void setUp() {

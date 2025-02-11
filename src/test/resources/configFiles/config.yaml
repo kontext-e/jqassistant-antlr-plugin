@@ -1,0 +1,8 @@
+jqassistant:
+  plugin:
+    antlr:
+      grammars:
+        - grammarFile: "src/test/resources/logging/Logging.g4"
+          grammarName: "Logging"
+          grammarRoot: "log"
+          fileExtension: ".logging"

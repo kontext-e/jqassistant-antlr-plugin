@@ -1,0 +1,6 @@
+jqassistant:
+  plugin:
+    antlr:
+      grammars:
+        - grammarFile: src/test/resources/equation/equation.g4
+          fileExtension: ".equation"
