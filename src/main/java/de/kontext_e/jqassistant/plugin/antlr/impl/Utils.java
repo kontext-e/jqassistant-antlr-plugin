@@ -4,7 +4,7 @@ import java.io.File;
 
 public class Utils {
 
-    static String getGrammarName(String grammarFile) {
+    public static String getGrammarName(String grammarFile) {
         grammarFile = grammarFile.replace('/', File.separatorChar);
         grammarFile = grammarFile.replace('\\', File.separatorChar);
         return grammarFile.substring(grammarFile.lastIndexOf(File.separator) + 1, grammarFile.lastIndexOf('.'));
@@ -14,11 +14,11 @@ public class Utils {
         return string.substring(0, 1).toUpperCase() + string.substring(1);
     }
 
-    static String getFileExtension(File file) {
+    public static String getFileExtension(File file) {
         return file.getName().substring(file.getName().lastIndexOf('.'));
     }
 
-    static String getGrammarRoot(String grammarFile) {
+    public static String getGrammarRoot(String grammarFile) {
         return getGrammarName(grammarFile).toLowerCase();
     }
 }

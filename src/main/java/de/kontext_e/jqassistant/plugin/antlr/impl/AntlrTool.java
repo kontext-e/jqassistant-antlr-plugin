@@ -43,8 +43,8 @@ public class AntlrTool {
 
     public AntlrTool(GrammarConfiguration grammarConfiguration) {
         this.grammarFile = new File(grammarConfiguration.grammarFile());
-        this.grammarName = grammarConfiguration.grammarName().orElse(getGrammarName(grammarConfiguration.grammarFile()));
-        this.grammarRoot = grammarConfiguration.grammarRoot().orElse(grammarName.toLowerCase());
+        this.grammarName = grammarConfiguration.getGrammarName();
+        this.grammarRoot = grammarConfiguration.getGrammarRoot();
     }
 
     public String getLexerAndParser() throws IOException {
