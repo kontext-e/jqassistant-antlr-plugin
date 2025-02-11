@@ -7,7 +7,7 @@ This plugin uses antlr grammars to read and parse other files and stores their s
 Use the jqassistant.yaml as described [here](https://jqassistant.github.io/jqassistant/current/)
 and add the following three lines in the plugins section:
 
-```
+```yaml
     - group-id: de.kontext-e.jqassistant.plugin
       artifact-id: jqassistant.plugin.dot
       version: ${version}

@@ -72,9 +72,7 @@ public class AntlrTool {
 
     private void generateLexerAndParser(File grammarFile, String outputPath) throws IOException {
         File outputDirectory = new File(outputPath);
-
-        boolean createdOutputDirectory = outputDirectory.mkdirs();
-        if (!createdOutputDirectory && !outputDirectory.exists()) { throw new IOException("Error creating output directory: " + outputDirectory); }
+        createOutputDirectory(outputDirectory);
 
         List<String> arguments = new ArrayList<>();
         arguments.add(grammarFile.getAbsolutePath());
@@ -83,6 +81,13 @@ public class AntlrTool {
 
         Tool tool = new Tool(arguments.toArray(new String[0]));
         tool.processGrammarsOnCommandLine();
+    }
+
+    private void createOutputDirectory(File outputDirectory) throws IOException {
+        boolean createdOutputDirectory = outputDirectory.mkdirs();
+        if (!createdOutputDirectory && !outputDirectory.exists()) {
+            throw new IOException("Error creating output directory: " + outputDirectory);
+        }
     }
 
     private static List<String> findJavaFilesInDirectory(String lexerParserDirectory) throws IOException {
