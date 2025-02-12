@@ -55,6 +55,10 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
         if (!hasConfiguredFileExtension) return false;
 
         GrammarConfiguration config = configurationProvider.getGrammarConfigurationFor(fileExtension);
+
+        boolean isIncluded = config.getIncludedFileLocations().stream().anyMatch(location -> isSubPath(path, location));
+        if (isIncluded) return true;
+
         return config.getExcludedFileLocations().stream().noneMatch(location -> isSubPath(path, location));
     }
 

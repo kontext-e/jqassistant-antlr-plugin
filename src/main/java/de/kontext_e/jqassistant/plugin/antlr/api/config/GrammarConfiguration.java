@@ -38,4 +38,10 @@ public interface GrammarConfiguration {
     default List<String> getExcludedFileLocations() {
         return excludedFileLocations().orElse(new ArrayList<>());
     }
+
+    Optional<List<String>> includedFileLocations();
+
+    default List<String> getIncludedFileLocations() {
+        return includedFileLocations().orElse(new ArrayList<>());
+    }
 }

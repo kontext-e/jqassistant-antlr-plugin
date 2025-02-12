@@ -9,7 +9,7 @@ and add the following three lines in the plugins section:
 
 ```yaml
     - group-id: de.kontext-e.jqassistant.plugin
-      artifact-id: jqassistant.plugin.dot
+      artifact-id: jqassistant.plugin.antlr
       version: ${version}
 ```
 Version 1.0.0 should be compatible with all jQAssistant versions 2.1.0 and above.
@@ -38,12 +38,15 @@ jqassistant:
           grammarRoot: 'log'
           excludedFileLocations:
             - <your/excluded/file/locations>
+          includedFileLocations:
+            - <your/included/file/locations>
 ```
 
 The configuration above tells the scanner the following:
 - When it encounters files with the file extension `.logging` it should scan them using the specified grammarFile (``/Logging.g4`` in this case).  
 - The grammarRoot property tells the plugin, that the root element of the grammar is the `log` so it knows how to build the syntax tree.
 - Files contained in the directories specified at `excludedFileLocations` will not be scanned using this grammar, however, they are still being scanned using another grammar, if the file ending matches with that.
+- Files contained in ``includedFileLocations`` will be scanned, regardless if they are in a directory that is excluded. One use case of this would be to scan DSL with an .txt file extension without scanning every .txt-file.
 
 The grammarRoot property can be omitted, defaulting to the grammar name (in this example `Logging`) but as lowercase. 
 The property file extension can also be omitted; the resulting default being the grammar file name lowercased (in this case ``'.logging'``).
