@@ -23,6 +23,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class ConfigurationIT extends AbstractPluginIT {
 
+    private static final String CONFIG_PREFIX = "jqassistant.plugin.antlr.configLocation";
+    private static final String CONFIG_FOLDER = "src/test/resources/configFiles/";
+
     @BeforeEach
     void setUp() {
         store.beginTransaction();
@@ -40,9 +43,7 @@ public class ConfigurationIT extends AbstractPluginIT {
     void testDoCreateEmptyNodes(){
         var file = new File("src/test/resources/logging/output.logging");
         var fileDescriptor = store.create(FileDescriptor.class);
-        Map<String, Object> properties = Map.of(
-                "jqassistant.plugin.antlr.configLocation", "src/test/resources/configFiles/doCreateEmptyNodes.yaml"
-        );
+        Map<String, Object> properties = Map.of(CONFIG_PREFIX, CONFIG_FOLDER + "doCreateEmptyNodes.yaml");
 
         getScanner(properties).scan(file, fileDescriptor, file.getAbsolutePath(), DefaultScope.NONE);
 
@@ -56,9 +57,7 @@ public class ConfigurationIT extends AbstractPluginIT {
     void testDoNotCreateEmptyNodes(){
         var file = new File("src/test/resources/logging/output.logging");
         var fileDescriptor = store.create(FileDescriptor.class);
-        Map<String, Object> properties = Map.of(
-                "jqassistant.plugin.antlr.configLocation", "src/test/resources/configFiles/doNotCreateEmptyNodes.yaml"
-        );
+        Map<String, Object> properties = Map.of(CONFIG_PREFIX, CONFIG_FOLDER + "doNotCreateEmptyNodes.yaml");
 
         getScanner(properties).scan(file, fileDescriptor, file.getAbsolutePath(), DefaultScope.NONE);
 
@@ -123,9 +122,7 @@ public class ConfigurationIT extends AbstractPluginIT {
     void testPartialConfiguration(){
         var file = new File("src/test/resources/equation/wierd.equation");
         var fileDescriptor = store.create(FileDescriptor.class);
-        Map<String, Object> properties = Map.of(
-                "jqassistant.plugin.antlr.configLocation", "src/test/resources/configFiles/partialConfiguration.yaml"
-        );
+        Map<String, Object> properties = Map.of(CONFIG_PREFIX, CONFIG_FOLDER + "partialConfiguration.yaml");
 
         getScanner(properties).scan(file, fileDescriptor, file.getAbsolutePath(), DefaultScope.NONE);
 
@@ -139,9 +136,7 @@ public class ConfigurationIT extends AbstractPluginIT {
     void testIncorrectConfiguration(){
         var file = new File("src/test/resources/dot/cluster.dot");
         var fileDescriptor = store.create(FileDescriptor.class);
-        Map<String, Object> properties = Map.of(
-                "jqassistant.plugin.antlr.configLocation", "src/test/resources/configFiles/incorrectConfiguration.yaml"
-        );
+        Map<String, Object> properties = Map.of(CONFIG_PREFIX, CONFIG_FOLDER + "incorrectConfiguration.yaml");
 
         getScanner(properties).scan(file, fileDescriptor, file.getAbsolutePath(), DefaultScope.NONE);
 
