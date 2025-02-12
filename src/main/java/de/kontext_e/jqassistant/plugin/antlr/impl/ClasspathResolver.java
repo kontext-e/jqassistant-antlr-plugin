@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class BasicClasspathResolver {
+public class ClasspathResolver {
     public String getPluginClassPath() {
         ClassLoader classLoader = getClass().getClassLoader();
         return getClassPathOf(classLoader)

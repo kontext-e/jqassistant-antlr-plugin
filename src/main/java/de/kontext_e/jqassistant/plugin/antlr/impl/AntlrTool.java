@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static de.kontext_e.jqassistant.plugin.antlr.impl.Utils.capitalizeFirstLetter;
-import static de.kontext_e.jqassistant.plugin.antlr.impl.Utils.getGrammarName;
 
 public class AntlrTool {
 
@@ -105,7 +104,7 @@ public class AntlrTool {
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, null, null);
         Iterable<? extends JavaFileObject> compilationUnits = fileManager.getJavaFileObjectsFromStrings(javaFiles);
-        String pluginClassPath = new BasicClasspathResolver().getPluginClassPath();
+        String pluginClassPath = new ClasspathResolver().getPluginClassPath();
         // The following line and the null is unfortunately necessary to make the tests run again, as during the tests,
         // this class is not loaded with an url Classloader but instead with an AppClassLoader
         List<String> options = pluginClassPath.isEmpty() ? null : Arrays.asList("-classpath", pluginClassPath);
