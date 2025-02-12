@@ -4,6 +4,8 @@ import de.kontext_e.jqassistant.plugin.antlr.impl.Utils;
 import io.smallrye.config.ConfigMapping;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 import static io.smallrye.config.ConfigMapping.NamingStrategy.VERBATIM;
@@ -31,8 +33,9 @@ public interface GrammarConfiguration {
         return fileExtension().orElse(Utils.getFileExtension(new File(grammarFile())));
     }
 
-    //TODO
-    //List<String> fileLocations();
-    //List<String> excludedFileLocations();
+    Optional<List<String>> excludedFileLocations();
 
+    default List<String> getExcludedFileLocations() {
+        return excludedFileLocations().orElse(new ArrayList<>());
+    }
 }

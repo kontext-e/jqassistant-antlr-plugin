@@ -49,7 +49,24 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
     @Override
     public boolean accepts(FileResource fileResource, String s, Scope scope) throws IOException {
         String fileExtension = getFileExtension(fileResource.getFile());
-        return configurationProvider.isConfiguredFileExtension(fileExtension);
+        String path = fileResource.getFile().getPath();
+
+        boolean hasConfiguredFileExtension = configurationProvider.isConfiguredFileExtension(fileExtension);
+        if (!hasConfiguredFileExtension) return false;
+
+        GrammarConfiguration config = configurationProvider.getGrammarConfigurationFor(fileExtension);
+        return config.getExcludedFileLocations().stream().noneMatch(location -> isSubPath(path, location));
+    }
+
+    private static boolean isSubPath(String child, String parent) {
+        try {
+            Path parentPath = Paths.get(parent).toRealPath();
+            Path childPath = Paths.get(child).toRealPath();
+            return childPath.startsWith(parentPath);
+        } catch (IOException e) {
+            LOGGER.error("Could not parse path: {}, try using absolute paths", child, e);
+            return false;
+        }
     }
 
     @Override
