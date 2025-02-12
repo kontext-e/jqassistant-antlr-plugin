@@ -15,31 +15,50 @@ and add the following three lines in the plugins section:
 Version 1.0.0 should be compatible with all jQAssistant versions 2.1.0 and above.
 
 ## Configure
-You can configure how each grammar is treated:
+
+To allow for a more fine-grained and stable configuration of this plugin, the decision was made to  move the configuration to a different file. 
+To specify the location of the config file for the plugin, add the following property to you .``jqassistant.yaml``:
 
 ```yaml
+jqassistant:
   scan:
     properties:
-      jqassistant.plugin.antlr.grammars:
+      jqassistant.plugin.antlr:
+        configLocation: <your/path/here>
+```
+
+Within the **plugin configuration file** you can specify the grammars that are to be scanned:
+```yaml
+jqassistant:
+  plugin:
+    antlr:
+      grammars:
         - fileExtension: '.logging'
           grammarFile: '/Logging.g4'
           grammarRoot: 'log'
+          excludedFileLocations:
+            - <your/excluded/file/locations>
 ```
 
-The configuration above tells the scanner that when it encounters files with the file extension `.logging` it should scan them using the specified grammarFile (``/Logging.g4`` in this case).  
-The grammarRoot property tells the plugin, that the root element of the grammar is the `log` so it knows how to build the syntax tree. 
-The grammarRoot property can be omitted, defaulting to the grammar name (in this example `Logging`) but as lowercase.
+The configuration above tells the scanner the following:
+- When it encounters files with the file extension `.logging` it should scan them using the specified grammarFile (``/Logging.g4`` in this case).  
+- The grammarRoot property tells the plugin, that the root element of the grammar is the `log` so it knows how to build the syntax tree.
+- Files contained in the directories specified at `excludedFileLocations` will not be scanned using this grammar, however, they are still being scanned using another grammar, if the file ending matches with that.
+
+The grammarRoot property can be omitted, defaulting to the grammar name (in this example `Logging`) but as lowercase. 
+The property file extension can also be omitted; the resulting default being the grammar file name lowercased (in this case ``'.logging'``).
 
 Additionally, there are two properties to further configure the behavior of the plugin:
 
 ````yaml
-scan:
-  properties:
-    jqassistant.plugin.antlr.createNodesContainingEmptyText = false
-    jqassistant.plugin.antlr.deleteLexerAndParserAfterScan = false
+jqassistant:
+  plugin:
+    antlr:
+      createEmptyNodes: false
+      deleteLexerAndParserAfterScan: false
 ````
 
-### CreateNodesContainingEmptyText
+### createEmptyNodes
 This property allows you to prevent the creation of nodes that would only contain whitespace. The default is set to false, so no whitespace nodes are being created.
 
 ### DeleteParserAndLexerAfterScan
@@ -58,8 +77,8 @@ As generating and compiling classes at runtime is fairly slow the plugin checks 
 
 ## Data structure
 
-The following diagram is the frame provided by the plugin:
+The following diagram is the structure provided by the plugin:
 
 ![](Antlr.png)
 
-The scanned file is additionally given the name of the grammar as its label and each node gets ist label according to the name of the node in the parse tree. Furthermore, all nodes carry the lable ``:Anltr``. The text of the node is the full text of the token in the parse tree, so the child node's text add up to the text in the parent node.  
+The scanned file is additionally given the name of the grammar as its label and each node gets ist label according to the name of the node in the parse tree. Furthermore, all nodes carry the lable ``:Anltr``. The text of the node is the full text of the token in the parse tree, so the child nodes' text add up to the text in the parent node.  
