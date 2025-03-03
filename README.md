@@ -1,6 +1,6 @@
 # jQAssistant Plugin for Antlr grammars
 
-This plugin uses antlr grammars to read and parse other files and stores their syntax trees into the jQAssistant Database.
+This plugin uses antlr grammars to read and parse other files and stores their syntax trees into the jQAssistant Database. It is intended as a universal Plugin for any DSL created in Antlr. This Plugin does not read the structure of the grammar itself, but uses the grammar to analyze files written using that grammar.
 
 ## How to install
 
@@ -24,7 +24,7 @@ jqassistant:
   scan:
     properties:
       jqassistant.plugin.antlr:
-        configLocation: <your/path/here>
+        configLocation: <your/path/here> #relative to jqa execution path
 ```
 
 Within the **plugin configuration file** you can specify the grammars that are to be scanned:
@@ -34,12 +34,12 @@ jqassistant:
     antlr:
       grammars:
         - fileExtension: '.logging'
-          grammarFile: '/Logging.g4'
+          grammarFile: '/Logging.g4' #relative to this plugin configuration file
           grammarRoot: 'log'
           excludedFileLocations:
-            - <your/excluded/file/locations>
+            - <your/excluded/file/locations> #relative to this plugin configuration file
           includedFileLocations:
-            - <your/included/file/locations>
+            - <your/included/file/locations> #relative to this plugin configuration file
 ```
 
 The configuration above tells the scanner the following:
@@ -73,8 +73,11 @@ This however is only beneficial if there is no frequent change to the grammar, a
 
 When this plugin encounters a file with an extension that was previously configured, it looks up the location of the grammar file and, with the help of the Antlr 4 Java API generates the lexer and parser.
 These files can be found in a newly-created directory called ``.antlrPlugin`` next to the grammar file. 
-These files are then being compiled using the Java Compiler. These, now usable files, are stored in the same directory. Next, the plugin loads the ``.class``-Files and instantiates the parser using the Java Reflection API. The grammar root is then used to find the method of the parser that returns the entire parse tree.
-Finally, the AST is stored into the internal neo4j database directly while adding the name of the parse-tree-nodes to the nodes in the database as a label. Along with this label all nodes representing the AST carry the lable ``:Node`` and all nodes created by the Antlr Plugin carry the Label ``:Antlr``
+These files are then being compiled using the Java Compiler. These now usable files are stored in the same directory. 
+Next, the plugin loads the ``.class``-Files and instantiates the parser using the Java Reflection API. 
+The grammar root is then used to find the method of the parser that returns the entire parse tree.
+Finally, the AST is stored into the internal neo4j database directly while adding the name of the parse-tree-nodes to the nodes in the database as a label. 
+Along with this label all nodes representing the AST carry the lable ``:Node`` and all nodes created by the Antlr Plugin carry the Label ``:Antlr``
 
 As generating and compiling classes at runtime is fairly slow the plugin checks if either .java files or .class files are already present and skips the respective steps. To modify this behaviour have a look at the ```jqassistant.plugin.antlr.deleteLexerAndParserAfterScan``` configuration option.
 
