@@ -3,5 +3,5 @@ jqassistant:
     antlr:
       deleteLexerAndParserAfterScan: true
       grammars:
-        - grammarFile: src/test/resources/calculator/equation.g4
+        - grammarFile: ../calculator/equation.g4
           fileExtension: ".equation"

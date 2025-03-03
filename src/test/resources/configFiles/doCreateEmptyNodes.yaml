@@ -3,6 +3,6 @@ jqassistant:
     antlr:
       createEmptyNodes: true
       grammars:
-        - grammarFile: src/test/resources/logging/Logging.g4
+        - grammarFile: ../logging/Logging.g4
           grammarRoot: "log"
           fileExtension: ".logging"

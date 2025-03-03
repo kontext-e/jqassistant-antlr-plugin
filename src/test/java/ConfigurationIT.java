@@ -71,9 +71,7 @@ public class ConfigurationIT extends AbstractPluginIT {
         Path deleteLexerAndParser = tempDir.resolve("deleteLexerAndParser.yaml");
 
         var fileDescriptor = store.create(FileDescriptor.class);
-        Map<String, Object> properties = Map.of(
-                "jqassistant.plugin.antlr.configLocation", deleteLexerAndParser.toString()
-        );
+        Map<String, Object> properties = Map.of("jqassistant.plugin.antlr.configLocation", deleteLexerAndParser.toString());
 
         getScanner(properties).scan(tempFileToBeScanned, fileDescriptor, tempFileToBeScanned.getAbsolutePath(), DefaultScope.NONE);
 

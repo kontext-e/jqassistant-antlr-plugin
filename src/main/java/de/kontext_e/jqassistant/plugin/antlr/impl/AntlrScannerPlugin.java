@@ -91,7 +91,7 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
 
         store = scanner.getContext().getStore();
         parseTreeSaver = new ParseTreeSaver(store, configurationProvider.getCreateEmptyNodes());
-        antlrTool = new AntlrTool(grammarConfiguration);
+        antlrTool = new AntlrTool(grammarConfiguration, configFile);
 
         String lexerAndParserLocation = antlrTool.getLexerAndParser();
         ScannedFileDescriptor scannedFile = parseFilesAndStoreTrees(file, lexerAndParserLocation);

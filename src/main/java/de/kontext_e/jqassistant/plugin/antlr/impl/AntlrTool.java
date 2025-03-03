@@ -40,8 +40,12 @@ public class AntlrTool {
     private final String grammarRoot;
     private final File grammarFile;
 
-    public AntlrTool(GrammarConfiguration grammarConfiguration) {
-        this.grammarFile = new File(grammarConfiguration.grammarFile());
+    public AntlrTool(GrammarConfiguration grammarConfiguration, File configFile) {
+        Path configPath = configFile.getParentFile().toPath().toAbsolutePath();
+        Path grammarFilePath = Path.of(grammarConfiguration.grammarFile());
+        Path absoluteGrammarFilePath = configPath.resolve(grammarFilePath).normalize();
+
+        this.grammarFile = absoluteGrammarFilePath.toFile();
         this.grammarName = grammarConfiguration.getGrammarName();
         this.grammarRoot = grammarConfiguration.getGrammarRoot();
     }
