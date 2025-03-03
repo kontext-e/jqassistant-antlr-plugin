@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static de.kontext_e.jqassistant.plugin.antlr.impl.Utils.*;
 
@@ -32,11 +33,12 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
     private AntlrTool antlrTool;
     private Store store;
     private ParseTreeSaver parseTreeSaver;
+    private File configFile;
 
     @Override
     protected void configure(){
         String configLocation = getProperty(PLUGIN_CONFIG_PREFIX, String.class);
-        File configFile = new File(configLocation);
+        configFile = new File(configLocation);
         configurationProvider = new ConfigurationProvider();
         try {
             configurationProvider.loadConfigurationFrom(configFile);
@@ -49,23 +51,32 @@ public class AntlrScannerPlugin extends AbstractScannerPlugin<FileResource, Gram
     @Override
     public boolean accepts(FileResource fileResource, String s, Scope scope) throws IOException {
         String fileExtension = getFileExtension(fileResource.getFile());
-        String path = fileResource.getFile().getPath();
+        Path path = fileResource.getFile().toPath();
 
         boolean hasConfiguredFileExtension = configurationProvider.isConfiguredFileExtension(fileExtension);
         if (!hasConfiguredFileExtension) return false;
 
         GrammarConfiguration config = configurationProvider.getGrammarConfigurationFor(fileExtension);
 
-        boolean isIncluded = config.getIncludedFileLocations().stream().anyMatch(location -> isSubPath(path, location));
+        Path configFilePath = configFile.getParentFile().toPath().toAbsolutePath();
+        boolean isIncluded = config.getIncludedFileLocations().stream()
+                .map(Paths::get)
+                .map(configFilePath::resolve)
+                .map(Path::normalize)
+                .anyMatch(location -> isSubPath(path, location));
         if (isIncluded) return true;
 
-        return config.getExcludedFileLocations().stream().noneMatch(location -> isSubPath(path, location));
+        return config.getExcludedFileLocations().stream()
+                .map(Paths::get)
+                .map(configFilePath::resolve)
+                .map(Path::normalize).
+                noneMatch(location -> isSubPath(path, location));
     }
 
-    private static boolean isSubPath(String child, String parent) {
+    private static boolean isSubPath(Path child, Path parent) {
         try {
-            Path parentPath = Paths.get(parent).toRealPath();
-            Path childPath = Paths.get(child).toRealPath();
+            Path parentPath = parent.toRealPath();
+            Path childPath = child.toRealPath();
             return childPath.startsWith(parentPath);
         } catch (IOException e) {
             LOGGER.error("Could not parse path: {}, try using absolute paths", child, e);
