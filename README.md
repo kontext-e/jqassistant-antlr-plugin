@@ -2,6 +2,9 @@
 
 This plugin uses antlr grammars to read and parse other files and stores their syntax trees into the jQAssistant Database. It is intended as a universal Plugin for any DSL created in Antlr. This Plugin does not read the structure of the grammar itself, but uses the grammar to analyze files written using that grammar.
 
+Though I have tested this plugin using both integration tests and manual tests, this plugin might still contain numerous bugs. 
+If you find such bugs, please reach out using GitHub issues to help improve this plugin.
+
 ## How to install
 
 Use the jqassistant.yaml as described [here](https://jqassistant.github.io/jqassistant/current/)

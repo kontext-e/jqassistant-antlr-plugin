@@ -6,7 +6,7 @@
 
     <groupId>de.kontext-e.jqassistant.plugin</groupId>
     <artifactId>jqassistant.plugin.antlr</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
 
     <name>jQAssistant Antlr Plugin</name>
     <description>The jQAssistant plugin to scan DSL files according to an Antlr Grammar</description>
